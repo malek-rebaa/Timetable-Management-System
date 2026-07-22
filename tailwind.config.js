@@ -1,0 +1,57 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    darkMode: "class",
+    content: [
+        "./resources/**/*.blade.php",
+        "./resources/**/*.js",
+    ],
+    theme: {
+        extend: {
+            fontFamily: {
+                sans: ['Manrope', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+                primary: "var(--color-primary)",
+                secondary: "var(--color-secondary)",
+                info: "var(--color-info)",
+                success: "var(--color-success)",
+                warning: "var(--color-warning)",
+                error: "var(--color-error)",
+                lightprimary: "var(--color-lightprimary)",
+                lightsecondary: "var(--color-lightsecondary)",
+                lightsuccess: "var(--color-lightsuccess)",
+                lighterror: "var(--color-lighterror)",
+                lightinfo: "var(--color-lightinfo)",
+                lightwarning: "var(--color-lightwarning)",
+                border: "var(--color-border)",
+                bordergray: "var(--color-bordergray)",
+                lightgray: "var(--color-lightgray)",
+                muted: "var(--color-muted)",
+                lighthover: "var(--color-lighthover)",
+                surface: "var(--color-surface-ld)",
+                sky: "var(--color-sky)",
+                bodytext: "var(--color-bodytext)",
+                dark: "var(--color-dark)",
+                link: "var(--color-link)",
+                darklink: "var(--color-darklink)",
+                darkborder: "var(--color-darkborder)",
+                darkgray: "var(--color-darkgray)",
+                primaryemphasis: "var(--color-primary-emphasis)",
+                secondaryemphasis: "var(--color-secondary-emphasis)",
+                warningemphasis: "var(--color-warning-emphasis)",
+                erroremphasis: "var(--color-error-emphasis)",
+                successemphasis: "var(--color-success-emphasis)",
+                infoemphasis: "var(--color-info-emphasis)",
+                darkmuted: "var(--color-darkmuted)",
+            },
+            boxShadow: {
+                md: "0px 2px 4px -1px rgba(175, 182, 201, 0.2)",
+                lg: "0 1rem 3rem rgba(0, 0, 0, 0.175)",
+                "dark-md": "rgba(145, 158, 171, 0.3) 0px 0px 2px 0px, rgba(145, 158, 171, 0.02) 0px 12px 24px -4px",
+            },
+        },
+    },
+    plugins: [
+        require('@tailwindcss/forms'),
+    ],
+}

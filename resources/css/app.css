@@ -1,0 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Palette Éducation (Timetable App) */
+        --color-primary: #1E40AF; /* deep academic blue */
+        --color-primary-emphasis: #1e3a8a;
+        --color-lightprimary: #DBEAFE;
+        
+        --color-secondary: #059669; /* calm green */
+        --color-secondary-emphasis: #047857;
+        --color-lightsecondary: #D1FAE5;
+        
+        --color-success: #16A34A;
+        --color-success-emphasis: #15803d;
+        --color-lightsuccess: #DCFCE7;
+        
+        --color-warning: #D97706; /* amber/orange for alerts */
+        --color-warning-emphasis: #b45309;
+        --color-lightwarning: #FEF3C7;
+        
+        --color-error: #DC2626; /* red instead of pink */
+        --color-error-emphasis: #b91c1c;
+        --color-lighterror: #FEE2E2;
+        
+        --color-info: #3B82F6; /* light blue */
+        --color-info-emphasis: #2563eb;
+        --color-lightinfo: #EFF6FF;
+        
+        /* Grays and surfaces from MatDash */
+        --color-white: #fff;
+        --color-dark: #1F2A3D;
+        --color-border: #e0e6eb;
+        --color-bordergray: #f3f3f4;
+        --color-darkborder: #333F55;
+        --color-link: #2a3547;
+        --color-muted: #EFF4FA;
+        --color-darkmuted: #2A3851;
+        --color-darklink: #29343d;
+        --color-lightgray: #F4F7FB;
+        --color-lighthover: #f6f7f9;
+        --color-darkgray: #1A2537;
+        --color-sky: #0A2540;
+        --color-surface-ld: #ffffff;
+        --color-bodytext: #98A4AE;
+    }
+}
+
+@layer components {
+    .container {
+        @apply max-w-[1200px] px-4 mx-auto;
+    }
+
+    body {
+        @apply text-sm text-bodytext bg-lightgray dark:bg-dark;
+        font-family: 'Manrope', system-ui, sans-serif;
+    }
+
+    /* Timetable Grid CSS */
+    .timetable-grid {
+        @apply grid gap-px bg-border dark:bg-darkborder overflow-x-auto;
+        grid-template-columns: 80px repeat(6, minmax(150px, 1fr)); /* Time + 6 days */
+    }
+
+    .timetable-header {
+        @apply bg-white dark:bg-darkgray p-3 text-center font-semibold text-dark dark:text-white sticky top-0 z-10;
+    }
+
+    .timetable-time {
+        @apply bg-white dark:bg-darkgray p-2 text-xs font-medium text-bodytext text-right sticky left-0 z-10 border-r border-border dark:border-darkborder;
+    }
+
+    .timetable-cell {
+        @apply bg-white dark:bg-dark p-1 relative min-h-[100px];
+    }
+    
+    .timetable-slot {
+        @apply absolute inset-1 rounded-md p-2 flex flex-col gap-1 overflow-hidden transition-shadow hover:shadow-md;
+    }
+
+    /* Type variants */
+    .slot-theory {
+        @apply bg-lightprimary border-l-4 border-primary text-primary-emphasis;
+    }
+    .slot-tp {
+        @apply bg-lightsecondary border-l-4 border-secondary text-secondary-emphasis;
+    }
+    .slot-conflict {
+        @apply bg-lighterror border-l-4 border-error text-error-emphasis ring-2 ring-error/50;
+    }
+}
