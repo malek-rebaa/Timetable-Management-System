@@ -7,9 +7,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 antialiased dark:bg-gray-900">
+<body class="font-sans text-gray-800 antialiased dark:text-gray-300" style="background: url('/images/login-bg.jpg') no-repeat center center fixed; background-size: cover;">
 
-    <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60"></div>
+
+    <div class="relative flex min-h-screen items-center justify-center p-4">
         <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-theme-xl dark:bg-gray-800 sm:p-10">
             <div class="mb-8 text-center">
                 <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
