@@ -27,8 +27,8 @@ Route::get('/teachers', function () {
 })->name('teachers.index');
 
 // Placeholders for sidebar links
-Route::get('/levels', function () { return view('dashboard'); })->name('levels.index');
-Route::get('/subjects', function () { return view('dashboard'); })->name('subjects.index');
-Route::get('/rooms', function () { return view('dashboard'); })->name('rooms.index');
-Route::get('/admins', function () { return view('dashboard'); })->name('admins.index');
+Route::get('/levels', function () { return view('levels.index'); })->name('levels.index');
+Route::get('/subjects', function () { return view('subjects.index'); })->name('subjects.index');
+Route::get('/rooms', function () { return view('rooms.index'); })->name('rooms.index');
+Route::get('/admins', function () { return view('admins.index'); })->name('admins.index');
 Route::get('/teacher/timetable', function () { return view('timetable.index'); })->name('teacher.timetable');

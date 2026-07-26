@@ -20,7 +20,6 @@
         <nav class="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
 
             <!-- Super Admin / Admin Menu -->
-            @if(auth()->check() && in_array(auth()->user()->role, ['super_admin', 'admin']))
             <div class="mb-6">
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Gestion</h3>
                 
@@ -80,10 +79,8 @@
                     </li>
                 </ul>
             </div>
-            @endif
             
             <!-- Super Admin Only -->
-            @if(auth()->check() && auth()->user()->role === 'super_admin')
             <div>
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
@@ -95,10 +92,8 @@
                     </li>
                 </ul>
             </div>
-            @endif
 
             <!-- Teacher Menu -->
-            @if(auth()->check() && auth()->user()->role === 'teacher')
             <div>
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Mon Espace</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
@@ -110,7 +105,6 @@
                     </li>
                 </ul>
             </div>
-            @endif
 
         </nav>
     </div>
