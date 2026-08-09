@@ -19,14 +19,16 @@
     <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav class="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
 
-            <!-- Super Admin / Admin Menu -->
+            @auth
+            {{-- Super Admin / Admin Menu --}}
+            @if(in_array(auth()->user()->role, ['SUPER_ADMIN', 'ADMIN']))
             <div class="mb-6">
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Gestion</h3>
                 
                 <ul class="mb-6 flex flex-col gap-1.5">
                     <!-- Dashboard -->
                     <li>
-                        <a href="{{ route('dashboard') ?? '#' }}" class="group menu-item {{ request()->routeIs('dashboard') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('dashboard') }}" class="group menu-item {{ request()->routeIs('dashboard') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="layout-dashboard" class="w-5 h-5 {{ request()->routeIs('dashboard') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Dashboard</span>
                         </a>
@@ -34,7 +36,7 @@
                     
                     <!-- Emploi du temps -->
                     <li>
-                        <a href="{{ route('timetable.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('timetable.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('timetable.index') }}" class="group menu-item {{ request()->routeIs('timetable.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="calendar-days" class="w-5 h-5 {{ request()->routeIs('timetable.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Emplois du Temps</span>
                         </a>
@@ -48,7 +50,7 @@
                 <ul class="mb-6 flex flex-col gap-1.5">
                     <!-- Enseignants -->
                     <li>
-                        <a href="{{ route('teachers.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('teachers.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('teachers.index') }}" class="group menu-item {{ request()->routeIs('teachers.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="users" class="w-5 h-5 {{ request()->routeIs('teachers.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Enseignants</span>
                         </a>
@@ -56,7 +58,7 @@
                     
                     <!-- Niveaux -->
                     <li>
-                        <a href="{{ route('levels.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('levels.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('levels.index') }}" class="group menu-item {{ request()->routeIs('levels.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="layers" class="w-5 h-5 {{ request()->routeIs('levels.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Niveaux & Classes</span>
                         </a>
@@ -64,7 +66,7 @@
                     
                     <!-- Matières & Plan -->
                     <li>
-                        <a href="{{ route('subjects.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('subjects.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('subjects.index') }}" class="group menu-item {{ request()->routeIs('subjects.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="book" class="w-5 h-5 {{ request()->routeIs('subjects.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Matières & Programme</span>
                         </a>
@@ -72,39 +74,45 @@
 
                     <!-- Salles -->
                     <li>
-                        <a href="{{ route('rooms.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('rooms.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('rooms.index') }}" class="group menu-item {{ request()->routeIs('rooms.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="school" class="w-5 h-5 {{ request()->routeIs('rooms.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Salles</span>
                         </a>
                     </li>
                 </ul>
             </div>
+            @endif
             
-            <!-- Super Admin Only -->
+            {{-- Super Admin Only --}}
+            @if(auth()->user()->role === 'SUPER_ADMIN')
             <div>
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     <li>
-                        <a href="{{ route('admins.index') ?? '#' }}" class="group menu-item {{ request()->routeIs('admins.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('admins.index') }}" class="group menu-item {{ request()->routeIs('admins.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="shield" class="w-5 h-5 {{ request()->routeIs('admins.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Administrateurs</span>
                         </a>
                     </li>
                 </ul>
             </div>
+            @endif
 
-            <!-- Teacher Menu -->
+            {{-- Teacher Menu --}}
+            @if(auth()->user()->role === 'TEACHER')
             <div>
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Mon Espace</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     <li>
-                        <a href="{{ route('teacher.timetable') ?? '#' }}" class="group menu-item {{ request()->routeIs('teacher.timetable') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                        <a href="{{ route('teacher.timetable') }}" class="group menu-item {{ request()->routeIs('teacher.timetable') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i data-lucide="calendar-check" class="w-5 h-5 {{ request()->routeIs('teacher.timetable') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                             <span class="menu-item-text">Mon Emploi du Temps</span>
                         </a>
                     </li>
                 </ul>
             </div>
+            @endif
+            @endauth
 
         </nav>
     </div>

@@ -12,11 +12,18 @@ class SubjectPlan extends Model
     protected $fillable = [
         'level_id',
         'subject_id',
-        'weekly_hours',
         'sessions_per_week',
         'session_duration',
         'teaching_type',
     ];
+
+    /**
+     * Volume hebdomadaire calculé (minutes) : séances × durée.
+     */
+    public function getWeeklyHoursAttribute(): int
+    {
+        return $this->sessions_per_week * $this->session_duration;
+    }
 
     public function level()
     {
@@ -28,8 +35,21 @@ class SubjectPlan extends Model
         return $this->belongsTo(Subject::class);
     }
 
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class, 'teacher_subject', 'subject_id', 'teacher_id');
+    }
+
     public function academicSessions()
     {
         return $this->hasMany(AcademicSession::class);
+    }
+
+    /**
+     * Classes du même niveau que ce plan.
+     */
+    public function classRooms()
+    {
+        return $this->hasMany(ClassRoom::class, 'level_id', 'level_id');
     }
 }

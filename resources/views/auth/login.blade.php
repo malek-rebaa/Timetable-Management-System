@@ -21,14 +21,24 @@
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Connectez-vous pour accéder à votre espace</p>
             </div>
 
-            <form action="{{ route('dashboard') }}" method="GET" class="flex flex-col gap-5">
+            @if($errors->any())
+            <div class="mb-4 rounded-lg border border-error-200 bg-error-50 p-3 dark:border-error-500/20 dark:bg-error-500/10">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-error-600 shrink-0"></i>
+                    <p class="text-sm text-error-700 dark:text-error-300">{{ $errors->first() }}</p>
+                </div>
+            </div>
+            @endif
+
+            <form action="{{ route('login') }}" method="POST" class="flex flex-col gap-5">
+                @csrf
                 <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Adresse Email</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                             <i data-lucide="mail" class="h-5 w-5"></i>
                         </span>
-                        <x-form.input type="email" placeholder="admin@ecole.com" class="pl-11" required />
+                        <x-form.input type="email" name="email" placeholder="admin@ecole.com" class="pl-11" required />
                     </div>
                 </div>
 
@@ -38,7 +48,7 @@
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                             <i data-lucide="lock" class="h-5 w-5"></i>
                         </span>
-                        <x-form.input type="password" placeholder="••••••••" class="pl-11" required />
+                        <x-form.input type="password" name="password" placeholder="••••••••" class="pl-11" required />
                     </div>
                 </div>
 
