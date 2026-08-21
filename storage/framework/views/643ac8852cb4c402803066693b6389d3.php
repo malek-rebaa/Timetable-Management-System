@@ -300,6 +300,10 @@
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
+                        <?php
+                            $coveredSlots = [];
+                        ?>
+
                         
                         <?php $__currentLoopData = $slotsData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $slotIndex => $slot): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="bg-white dark:bg-gray-900 p-2 text-center text-xs font-medium text-gray-500 flex items-center justify-center border-r border-gray-100 dark:border-gray-800">
@@ -309,10 +313,34 @@
 
                             <?php $__currentLoopData = $days; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <?php
+                                    if (isset($coveredSlots[$day][$slotIndex]) && $coveredSlots[$day][$slotIndex] > 0) {
+                                        continue;
+                                    }
+
                                     $key = $day . '|' . $slot['start'];
                                     $slotSessions = $uniqueByStart[$key] ?? [];
+                                    $maxSpan = 1;
+
+                                    if (count($slotSessions) > 0) {
+                                        foreach ($slotSessions as $session) {
+                                            $start = \Carbon\Carbon::parse($session->start_time);
+                                            $end = \Carbon\Carbon::parse($session->end_time);
+                                            $durationMinutes = $start->diffInMinutes($end);
+                                            $duration = (int) ceil($durationMinutes / 30);
+                                            
+                                            if ($duration > $maxSpan) {
+                                                $maxSpan = $duration;
+                                            }
+                                        }
+
+                                        if ($maxSpan > 1) {
+                                            for ($i = 1; $i < $maxSpan; $i++) {
+                                                $coveredSlots[$day][$slotIndex + $i] = 1;
+                                            }
+                                        }
+                                    }
                                 ?>
-                                <div class="bg-white dark:bg-gray-900 p-1 min-h-[60px]">
+                                <div class="bg-white dark:bg-gray-900 p-1 min-h-[60px]" style="<?php echo e($maxSpan > 1 ? 'grid-row: span ' . $maxSpan . ';' : ''); ?>">
                                     <?php if(count($slotSessions) > 0): ?>
                                         <div class="flex flex-col gap-1 h-full">
                                             <?php $__currentLoopData = $slotSessions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $session): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -323,7 +351,7 @@
                                                         : 'bg-success-50 border-success-500 text-success-600';
                                                     $typeLabel = $isTheory ? 'THEORY' : 'TP';
                                                 ?>
-                                                <div class="rounded-md border-l-4 <?php echo e($colorClass); ?> p-2 shadow-theme-xs text-xs">
+                                                <div class="rounded-md border-l-4 <?php echo e($colorClass); ?> p-2 shadow-theme-xs text-xs h-full flex flex-col justify-center">
                                                     <div class="font-bold mb-0.5">
                                                         <?php echo e($session->subjectPlan->subject->name ?? '-'); ?>
 
@@ -344,7 +372,7 @@
                                                         </div>
                                                     <?php endif; ?>
                                                     <?php if($session->is_locked): ?>
-                                                        <div class="mt-1 text-[10px] font-semibold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded inline-block">
+                                                        <div class="mt-1 text-[10px] font-semibold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded inline-block w-max">
                                                             🔒 Verrouillée
                                                         </div>
                                                     <?php endif; ?>
