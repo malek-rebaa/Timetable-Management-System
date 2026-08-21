@@ -37,7 +37,14 @@ class SubjectPlan extends Model
 
     public function teachers()
     {
-        return $this->belongsToMany(User::class, 'teacher_subject', 'subject_id', 'teacher_id');
+        return $this->belongsToMany(
+            User::class,
+            'teacher_subject',
+            'subject_id',   // clé pivot côté teacher_subject
+            'teacher_id',   // clé pivot vers users
+            'subject_id',   // clé locale sur subject_plans (PAS l'id du plan)
+            'id'            // clé sur users
+        );
     }
 
     public function academicSessions()

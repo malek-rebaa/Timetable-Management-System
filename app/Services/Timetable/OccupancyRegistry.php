@@ -19,7 +19,7 @@ class OccupancyRegistry
     /** @var array<int, array<string, int>> roomId => day => bitmask */
     protected array $roomBusy = [];
 
-    /** @var array<int, array<string, int>> classId => day => bitmask */
+    /** @var array<int, array<int|string, array<string, int>>> classId => groupNumber|'ALL' => day => bitmask */
     protected array $classBusy = [];
 
     /** @var array<int, array<string, int>> teacherId => nombre de créneaux occupés (charge) */
@@ -32,13 +32,15 @@ class OccupancyRegistry
     /**
      * Marque une occupation pour les 3 ressources.
      */
-    public function book(int $teacherId, int $roomId, int $classId, string $day, int $startIndex, int $slots): void
+    public function book(int $teacherId, int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
     {
         $mask = $this->spanMask($startIndex, $slots);
 
         $this->teacherBusy[$teacherId][$day] = ($this->teacherBusy[$teacherId][$day] ?? 0) | $mask;
         $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) | $mask;
-        $this->classBusy[$classId][$day] = ($this->classBusy[$classId][$day] ?? 0) | $mask;
+        
+        $groupKey = $groupNumber ?? 'ALL';
+        $this->classBusy[$classId][$groupKey][$day] = ($this->classBusy[$classId][$groupKey][$day] ?? 0) | $mask;
 
         $this->teacherLoad[$teacherId] = ($this->teacherLoad[$teacherId] ?? 0) + $slots;
     }
@@ -46,14 +48,16 @@ class OccupancyRegistry
     /**
      * Retire une occupation (pour la réparation / backtracking).
      */
-    public function unbook(int $teacherId, int $roomId, int $classId, string $day, int $startIndex, int $slots): void
+    public function unbook(int $teacherId, int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
     {
         $mask = $this->spanMask($startIndex, $slots);
         $clear = ~$mask;
 
         $this->teacherBusy[$teacherId][$day] = ($this->teacherBusy[$teacherId][$day] ?? 0) & $clear;
         $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) & $clear;
-        $this->classBusy[$classId][$day] = ($this->classBusy[$classId][$day] ?? 0) & $clear;
+        
+        $groupKey = $groupNumber ?? 'ALL';
+        $this->classBusy[$classId][$groupKey][$day] = ($this->classBusy[$classId][$groupKey][$day] ?? 0) & $clear;
 
         $this->teacherLoad[$teacherId] = max(0, ($this->teacherLoad[$teacherId] ?? 0) - $slots);
     }
@@ -68,9 +72,33 @@ class OccupancyRegistry
         return $this->isFree($this->roomBusy[$roomId][$day] ?? 0, $startIndex, $slots);
     }
 
-    public function isClassFree(int $classId, string $day, int $startIndex, int $slots): bool
+    public function isClassFree(int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): bool
     {
-        return $this->isFree($this->classBusy[$classId][$day] ?? 0, $startIndex, $slots);
+        // 1. Si on veut placer un groupe spécifique, vérifier que la classe entière n'est pas occupée
+        if ($groupNumber !== null) {
+            // Vérifier d'abord si la classe entière (THEORY) est occupée
+            if (!$this->isFree($this->classBusy[$classId]['ALL'][$day] ?? 0, $startIndex, $slots)) {
+                return false;
+            }
+            // Puis vérifier ce groupe spécifique
+            return $this->isFree($this->classBusy[$classId][$groupNumber][$day] ?? 0, $startIndex, $slots);
+        }
+
+        // 2. Demande pour la classe entière (THEORY) : il faut qu'AUCUN groupe ne soit occupé
+        // ET que la classe entière ne soit pas déjà occupée
+        if (!$this->isFree($this->classBusy[$classId]['ALL'][$day] ?? 0, $startIndex, $slots)) {
+            return false;
+        }
+
+        foreach ($this->classBusy[$classId] ?? [] as $group => $days) {
+            if ($group !== 'ALL') {
+                if (!$this->isFree($days[$day] ?? 0, $startIndex, $slots)) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
     /**

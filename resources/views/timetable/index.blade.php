@@ -26,16 +26,6 @@
                     class="px-3 py-1.5 text-xs font-medium rounded-md transition-all">
                     Par Classe
                 </button>
-                <button @click="viewMode='teacher'; updateUrl('view_mode', 'teacher')"
-                    :class="viewMode === 'teacher' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-all">
-                    Par Enseignant
-                </button>
-                <button @click="viewMode='room'; updateUrl('view_mode', 'room')"
-                    :class="viewMode === 'room' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-all">
-                    Par Salle
-                </button>
             </div>
 
             {{-- Filtre classe --}}
@@ -52,19 +42,7 @@
                 </x-form.select>
             @endif
 
-            {{-- Filtre enseignant --}}
-            @if(isset($teachers) && $teachers->count())
-                <x-form.select name="filter_teacher"
-                    x-data="{ current: '{{ request('filter_teacher', '') }}' }"
-                    @change="updateUrl('filter_teacher', $event.target.value)">
-                    <option value="">Tous les enseignants</option>
-                    @foreach($teachers as $teacher)
-                        <option value="{{ $teacher->id }}" {{ request('filter_teacher') == $teacher->id ? 'selected' : '' }}>
-                            {{ $teacher->first_name }} {{ $teacher->last_name }}
-                        </option>
-                    @endforeach
-                </x-form.select>
-            @endif
+            {{-- (Filtres Enseignant et Salle retirés à la demande) --}}
 
             {{-- Filtre emploi du temps --}}
             @if(isset($timetables) && $timetables->count())
@@ -122,6 +100,15 @@
         </div>
     @endif
 
+    @if(isset($selectedTimetable) && in_array($selectedTimetable->status, ['PENDING', 'RUNNING'], true))
+        <div class="mb-4 rounded-lg bg-warning-50 border border-warning-200 p-3 dark:bg-warning-900/20 dark:border-warning-800">
+            <span class="text-xs font-medium text-warning-700 dark:text-warning-300">
+                <i data-lucide="loader-circle" class="w-4 h-4 inline animate-spin"></i>
+                Génération en cours pour {{ $selectedTimetable->name }}. La page se rafraîchira automatiquement.
+            </span>
+        </div>
+    @endif
+
     {{-- Grille d'emploi du temps --}}
     <x-ui.card>
         <div class="overflow-x-auto">
@@ -143,8 +130,8 @@
                         }
 
                         foreach($sessions as $session) {
-                            $startSlot = $grid->indexOf($session->day, $session->start_time);
-                            $endSlot = $grid->indexOf($session->day, $session->end_time);
+                            $normalizedStart = \Carbon\Carbon::parse($session->start_time)->format('H:i');
+                            $startSlot = $grid->indexOf($session->day, $normalizedStart);
                             $duration = $grid->durationToSlots($session->subjectPlan->session_duration ?? 120);
                             if ($startSlot !== null) {
                                 for ($i = 0; $i < $duration && $startSlot + $i < $maxSlots; $i++) {
@@ -156,7 +143,7 @@
                         // Déterminer les séances uniques par créneau de début
                         $uniqueByStart = [];
                         foreach($sessions as $session) {
-                            $key = $session->day . '|' . $session->start_time;
+                            $key = $session->day . '|' . \Carbon\Carbon::parse($session->start_time)->format('H:i');
                             if (!isset($uniqueByStart[$key])) {
                                 $uniqueByStart[$key] = [];
                             }
@@ -387,35 +374,34 @@
         function generateTimetable() {
             if (!confirm('Générer l\'emploi du temps ? Les séances non verrouillées seront remplacées.')) return;
 
-            const form = new FormData();
-            form.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("timetable.generate") }}';
+            
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrf);
 
             const params = new URLSearchParams(window.location.search);
-            if (params.get('timetable_id')) form.append('timetable_id', params.get('timetable_id'));
-
-            fetch('{{ route("timetable.generate") }}', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: form
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Génération lancée en arrière-plan. La page va se recharger pour afficher l\'état actuel.');
-                    // Update URL with new timetable ID if generated from scratch
-                    if (data.timetable_id) {
-                        updateUrl('timetable_id', data.timetable_id);
-                    } else {
-                        window.location.reload();
-                    }
-                } else {
-                    alert(data.errors?.join('\n') || 'Erreur lors de la génération');
-                }
-            })
-            .catch(err => alert('Erreur: ' + err.message));
+            if (params.get('timetable_id')) {
+                const tt = document.createElement('input');
+                tt.type = 'hidden';
+                tt.name = 'timetable_id';
+                tt.value = params.get('timetable_id');
+                form.appendChild(tt);
+            }
+            if (params.get('filter_class')) {
+                const fc = document.createElement('input');
+                fc.type = 'hidden';
+                fc.name = 'filter_class';
+                fc.value = params.get('filter_class');
+                form.appendChild(fc);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function updateUrl(key, value) {
@@ -427,5 +413,9 @@
             }
             window.location.href = url.toString();
         }
+
+        @if(isset($selectedTimetable) && in_array($selectedTimetable->status, ['PENDING', 'RUNNING'], true))
+        setTimeout(() => window.location.reload(), 5000);
+        @endif
     </script>
 </x-layout.app>

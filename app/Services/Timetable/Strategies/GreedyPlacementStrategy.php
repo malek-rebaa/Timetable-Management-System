@@ -2,6 +2,7 @@
 
 namespace App\Services\Timetable\Strategies;
 
+use App\Services\Timetable\ConflictChecker;
 use App\Services\Timetable\DTO\PlacedSession;
 use App\Services\Timetable\DTO\SessionRequest;
 use App\Services\Timetable\OccupancyRegistry;
@@ -9,10 +10,18 @@ use App\Services\Timetable\SlotGrid;
 
 class GreedyPlacementStrategy
 {
+    protected ?string $lastError = null;
+
     public function __construct(
         protected OccupancyRegistry $registry,
-        protected SlotGrid $grid
+        protected SlotGrid $grid,
+        protected ConflictChecker $conflictChecker
     ) {
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
     }
 
     /**
@@ -20,8 +29,23 @@ class GreedyPlacementStrategy
      */
     public function place(SessionRequest $request): ?PlacedSession
     {
+        $this->lastError = null;
         $slotsNeeded = $request->durationSlots($this->grid->slotStep);
+        
+        if ($slotsNeeded <= 0) {
+            $this->lastError = 'DURÉE INVALIDE';
+            return null;
+        }
+
         $days = $this->grid->days;
+        
+        // Raisons d'échec rencontrées
+        $reasons = [
+            'CLASS_CONFLICT' => 0,
+            'NO_TEACHER' => 0,
+            'NO_ROOM' => 0,
+            'BREAK_CONFLICT' => 0,
+        ];
 
         foreach ($days as $day) {
             $slotsForDay = $this->grid->slotsForDay($day);
@@ -29,21 +53,33 @@ class GreedyPlacementStrategy
 
             for ($slotIndex = 0; $slotIndex <= $maxSlotIndex; $slotIndex++) {
                 // Vérifier la classe
-                if (!$this->registry->isClassFree($request->classRoom->id, $day, $slotIndex, $slotsNeeded)) {
+                if (!$this->registry->isClassFree($request->classRoom->id, $request->groupNumber, $day, $slotIndex, $slotsNeeded)) {
+                    $reasons['CLASS_CONFLICT']++;
                     continue;
                 }
 
-                // Trouver un enseignant libre
-                $teacherId = null;
-                foreach ($request->teacherIds as $tid) {
-                    if ($this->registry->isTeacherFree($tid, $day, $slotIndex, $slotsNeeded)) {
-                        $teacherId = $tid;
-                        break;
-                    }
-                }
-                if ($teacherId === null) {
+                if (! $this->grid->isContiguous($day, $slotIndex, $slotsNeeded)) {
+                    $reasons['BREAK_CONFLICT']++;
                     continue;
                 }
+
+                // Trouver l'enseignant libre avec la charge la plus faible
+                $availableTeachers = [];
+                foreach ($request->teacherIds as $tid) {
+                    if ($this->registry->isTeacherFree($tid, $day, $slotIndex, $slotsNeeded)) {
+                        $availableTeachers[] = $tid;
+                    }
+                }
+                if (empty($availableTeachers)) {
+                    $reasons['NO_TEACHER']++;
+                    continue;
+                }
+
+                // Privilégier l'enseignant avec la charge horaire la plus faible
+                usort($availableTeachers, fn ($a, $b) =>
+                    $this->registry->teacherLoad($a) <=> $this->registry->teacherLoad($b)
+                );
+                $teacherId = $availableTeachers[0];
 
                 // Trouver une salle libre (si requise)
                 $roomId = null;
@@ -55,21 +91,21 @@ class GreedyPlacementStrategy
                         }
                     }
                     if ($roomId === null) {
+                        $reasons['NO_ROOM']++;
                         continue;
                     }
                 } else {
-                    // Si aucune salle n'est requise (ex. cours en extérieur ou non précisé)
-                    // (Le RequestBuilder assure que s'il faut une salle, la liste n'est pas vide)
-                    $roomId = null;
+                    // Une séance du planning doit être adossée à une salle compatible.
+                    $this->lastError = 'AUCUNE SALLE COMPATIBLE CONFIGURÉE';
+                    return null;
                 }
 
                 // Tout est OK — réserver
-                // S'il n'y a pas de salle, on passe 0 ou null. OccupancyRegistry gère cela si on modifie son comportement,
-                // mais roomId est un int. Si null, on peut passer 0.
                 $this->registry->book(
                     $teacherId, 
-                    $roomId ?? 0, 
+                    $roomId, 
                     $request->classRoom->id, 
+                    $request->groupNumber,
                     $day, 
                     $slotIndex, 
                     $slotsNeeded
@@ -90,6 +126,17 @@ class GreedyPlacementStrategy
                     groupNumber: $request->groupNumber,
                 );
             }
+        }
+
+        // Analyser les raisons de l'échec pour donner le meilleur feedback
+        if ($reasons['CLASS_CONFLICT'] > 0 && array_sum($reasons) == $reasons['CLASS_CONFLICT']) {
+            $this->lastError = 'CONFLIT CLASSE (La classe est occupée sur tous les créneaux possibles)';
+        } elseif ($reasons['NO_TEACHER'] > 0 && $reasons['NO_ROOM'] == 0) {
+            $this->lastError = 'CONFLIT ENSEIGNANT (Aucun enseignant disponible)';
+        } elseif ($reasons['NO_ROOM'] > 0) {
+            $this->lastError = 'CONFLIT SALLE (Aucune salle disponible)';
+        } else {
+            $this->lastError = 'GRILLE PLEINE (Chevauchements multiples)';
         }
 
         return null;

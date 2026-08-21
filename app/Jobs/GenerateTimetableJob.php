@@ -44,6 +44,10 @@ class GenerateTimetableJob implements ShouldQueue
         $timetable->save();
 
         try {
+            if (isset($this->options['class_room_id'])) {
+                $this->options['class_room_ids'] = [(int) $this->options['class_room_id']];
+            }
+
             $result = $generator->generate($timetable, $this->options);
 
             if (isset($result['success']) && $result['success']) {

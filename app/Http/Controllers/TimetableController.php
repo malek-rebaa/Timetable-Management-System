@@ -23,6 +23,9 @@ class TimetableController extends Controller
         $teachers = User::where('role', 'TEACHER')->get();
         $timetables = Timetable::orderBy('created_at', 'desc')->get();
         $subjectPlans = SubjectPlan::with(['subject', 'level'])->get();
+        $selectedTimetable = $request->filled('timetable_id')
+            ? Timetable::find($request->timetable_id)
+            : null;
 
         $sessions = AcademicSession::query()
             ->with(['subjectPlan.subject', 'teacher', 'classRoom.level', 'room'])
@@ -50,7 +53,8 @@ class TimetableController extends Controller
             'teachers',
             'timetables',
             'subjectPlans',
-            'rooms'
+            'rooms',
+            'selectedTimetable'
         ));
     }
 
@@ -117,39 +121,62 @@ class TimetableController extends Controller
             'academic_year' => ['nullable', 'string'],
             'semester' => ['nullable', 'string'],
             'timetable_id' => ['nullable', 'exists:timetables,id'],
+            'filter_class' => ['nullable', 'exists:class_rooms,id'],
         ]);
 
         $timetableId = $validated['timetable_id'] ?? null;
+        $classRoomId = $validated['filter_class'] ?? null;
         
-        if (!$timetableId) {
-            $timetable = Timetable::create([
+        $timetable = $timetableId
+            ? Timetable::findOrFail($timetableId)
+            : Timetable::create([
                 'name' => $validated['name'] ?? 'EDT ' . now()->format('Y-m-d H:i'),
                 'academic_year' => $validated['academic_year'] ?? null,
                 'semester' => $validated['semester'] ?? null,
                 'status' => 'PENDING',
             ]);
-            $timetableId = $timetable->id;
-        }
+
+        $timetable->status = 'PENDING';
+        $timetable->save();
+        $timetableId = $timetable->id;
 
         try {
-            // Lancer le job de génération en arrière-plan
-            GenerateTimetableJob::dispatch($timetableId, $validated);
+            $generator = app(\App\Services\Timetable\TimetableGenerator::class);
+            $options = [
+                'name' => $validated['name'] ?? null,
+                'academic_year' => $validated['academic_year'] ?? null,
+                'semester' => $validated['semester'] ?? null,
+            ];
+            
+            if ($classRoomId) {
+                $options['class_room_ids'] = [(int) $classRoomId];
+            }
+
+            $result = $generator->generate($timetable, $options);
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Génération lancée en arrière-plan',
-                    'timetable_id' => $timetableId
+                    'success' => $result['success'],
+                    'message' => $result['success'] ? 'Génération réussie' : 'Échec de la génération',
+                    'timetable_id' => $timetableId,
+                    'status' => $timetable->status,
+                    'errors' => $result['errors'] ?? [],
+                    'diagnostics' => $result['diagnostics'] ?? [],
                 ]);
             }
 
-            return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
-                ->with('generation_success', 'Génération lancée en arrière-plan. Veuillez patienter.');
+            if ($result['success']) {
+                return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
+                    ->with('generation_success', "Génération réussie : {$result['placed']} séances placées.");
+            } else {
+                return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
+                    ->with('generation_errors', $result['errors']);
+            }
         } catch (\Throwable $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'errors' => ['Erreur lors du lancement de la génération : ' . $e->getMessage()]
+                    'errors' => ['Erreur lors de la génération : ' . $e->getMessage()]
                 ], 500);
             }
 

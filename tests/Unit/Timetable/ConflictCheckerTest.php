@@ -49,6 +49,29 @@ class ConflictCheckerTest extends TestCase
         $this->assertContains("L'enseignant a déjà une séance sur ce créneau.", $errors);
     }
 
+    public function test_it_does_not_flag_touching_sessions_as_overlap()
+    {
+        $teacher = User::factory()->create(['role' => 'TEACHER']);
+
+        AcademicSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'day' => 'MONDAY',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+        ]);
+
+        $candidate = new AcademicSession([
+            'teacher_id' => $teacher->id,
+            'day' => 'MONDAY',
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+        ]);
+
+        $errors = $this->checker->checkOverlaps($candidate);
+
+        $this->assertEmpty($errors);
+    }
+
     public function test_it_ignores_itself_during_update()
     {
         $teacher = User::factory()->create(['role' => 'TEACHER']);

@@ -16,23 +16,26 @@ use Illuminate\Support\Facades\DB;
 class TimetableCommitService
 {
     /**
-     * Enregistre les séances placées dans un nouvel emploi du temps.
+     * Enregistre les séances placées dans un emploi du temps existant.
      *
-     * @param  array<string>  $name  nom de l'emploi du temps
-     * @param  string|null  $academicYear  année académique
-     * @param  string|null  $semester  semestre
+     * @param  Timetable  $timetable  emploi du temps cible
      * @param  PlacedSession[]  $placedSessions  sessions à persister
      * @return Timetable
      */
-    public function commit(string $name, ?string $academicYear, ?string $semester, array $placedSessions): Timetable
+    public function commit(Timetable $timetable, array $placedSessions): Timetable
     {
-        return DB::transaction(function () use ($name, $academicYear, $semester, $placedSessions) {
-            $timetable = Timetable::create([
-                'name' => $name,
-                'academic_year' => $academicYear,
-                'semester' => $semester,
-                'status' => 'COMPLETED',
-            ]);
+        // Validation simple : vérifier qu'il y a des séances à insérer
+        if (empty($placedSessions)) {
+            $this->markFailed($timetable);
+            throw new \InvalidArgumentException('Aucune séance à insérer dans l\'emploi du temps.');
+        }
+
+        return DB::transaction(function () use ($timetable, $placedSessions) {
+            // Supprimer d'abord l'ancien EDT (uniquement les séances non verrouillées)
+            $this->clearTimetable($timetable);
+
+            $timetable->status = 'COMPLETED';
+            $timetable->save();
 
             foreach ($placedSessions as $ps) {
                 AcademicSession::create([
@@ -47,6 +50,18 @@ class TimetableCommitService
                     'group_number' => $ps->groupNumber,
                     'is_locked' => false,
                 ]);
+            }
+
+            // Validation finale : s'assurer que le bon nombre de séances a été inséré
+            $actualCount = $timetable->academicSessions()->where('is_locked', false)->count();
+            if ($actualCount !== count($placedSessions)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Erreur de cohérence : %d séances attendues, %d insérées.',
+                        count($placedSessions),
+                        $actualCount
+                    )
+                );
             }
 
             return $timetable->fresh();

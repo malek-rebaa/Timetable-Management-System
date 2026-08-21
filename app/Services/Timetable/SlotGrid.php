@@ -102,6 +102,8 @@ class SlotGrid
      */
     public function indexOf(string $day, string $time): ?int
     {
+        $time = $this->normalizeTime($time);
+
         foreach ($this->slots[$day] ?? [] as $index => $slot) {
             if ($slot['start'] === $time) {
                 return $index;
@@ -158,5 +160,34 @@ class SlotGrid
     public function slotEnd(string $day, int $index): ?string
     {
         return $this->slots[$day][$index]['end'] ?? null;
+    }
+
+    /**
+     * Vérifie qu'une séquence de créneaux est temporellement continue.
+     * (Aucun créneau ne traverse une pause de manière invisible).
+     */
+    public function isContiguous(string $day, int $startIndex, int $slotsNeeded): bool
+    {
+        if ($slotsNeeded <= 1) {
+            return true;
+        }
+
+        $slots = $this->slotsForDay($day);
+
+        for ($i = $startIndex; $i < $startIndex + $slotsNeeded - 1; $i++) {
+            if (!isset($slots[$i]) || !isset($slots[$i + 1])) {
+                return false;
+            }
+            if ($slots[$i]['end'] !== $slots[$i + 1]['start']) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function normalizeTime(string $time): string
+    {
+        return Carbon::parse($time)->format('H:i');
     }
 }

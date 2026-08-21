@@ -36,6 +36,14 @@ class SessionRequest
      */
     public function durationSlots(int $slotStepMinutes): int
     {
+        if ($this->subjectPlan->session_duration % $slotStepMinutes !== 0) {
+            throw new \DomainException(sprintf(
+                'La durée de session %d minutes n\'est pas compatible avec un pas de grille de %d minutes.',
+                $this->subjectPlan->session_duration,
+                $slotStepMinutes
+            ));
+        }
+
         return intdiv($this->subjectPlan->session_duration, $slotStepMinutes);
     }
 

@@ -28,67 +28,109 @@ class RequestBuilder
      *
      * @return SessionRequest[]
      */
-    public function build(): array
+    public function build(array $options = []): array
     {
         $plans = SubjectPlan::with('subject')->get();
         $classes = ClassRoom::all();
         $rooms = Room::all();
 
+        $classRoomIds = $options['class_room_ids'] ?? null;
+        if ($classRoomIds !== null) {
+            $classes = $classes->whereIn('id', (array) $classRoomIds)->values();
+        }
+
+        $timetableId = $options['timetable_id'] ?? null;
+        $lockedCounts = $this->countLockedSessions($timetableId);
+
         $requests = [];
 
         foreach ($plans as $plan) {
             foreach ($classes as $class) {
-                // Vérifie que le plan correspond au niveau de la classe
                 if ($plan->level_id !== $class->level_id) {
                     continue;
                 }
 
-                // Récupère les enseignants habilités pour cette matière
-                $teacherIds = $plan->teachers()->pluck('id')->toArray();
+                $teacherIds = $plan->teachers()->pluck('users.id')->toArray();
 
-                if (empty($teacherIds)) {
-                    continue;
-                }
+                $tpGroups = (int) config('timetable.tp_groups', 2);
+                $minCapacity = $plan->teaching_type === 'TP'
+                    ? (int) ceil($class->student_count / $tpGroups)
+                    : $class->student_count;
 
-                // Filtre les salles compatibles
-                $roomIds = $this->filterCompatibleRooms($rooms, $plan->teaching_type, $class->student_count);
+                $roomIds = $this->filterCompatibleRooms($rooms, $plan->teaching_type, $minCapacity);
 
-                // Détermine les groupes
                 if ($plan->teaching_type === 'TP') {
-                    $tpGroups = (int) config('timetable.tp_groups', 2);
                     for ($group = 1; $group <= $tpGroups; $group++) {
-                        $request = new SessionRequest(
+                        $lockedKey = "{$class->id}_{$plan->id}_{$group}";
+                        $alreadyPlaced = $lockedCounts[$lockedKey] ?? 0;
+                        $remaining = max(0, $plan->sessions_per_week - $alreadyPlaced);
+
+                        if ($remaining === 0) {
+                            continue;
+                        }
+
+                        $requests[] = new SessionRequest(
                             id: 0,
                             levelId: $plan->level_id,
                             classRoom: $class,
                             subjectPlan: $plan,
                             groupNumber: $group,
-                            sessionsCount: $plan->sessions_per_week,
-                            minCapacity: $class->student_count,
+                            sessionsCount: $remaining,
+                            minCapacity: $minCapacity,
                             teacherIds: $teacherIds,
                             roomIds: $roomIds,
                         );
-                        $requests[] = $request;
                     }
                 } else {
-                    // THEORY : pas de groupe (classe entière)
-                    $request = new SessionRequest(
+                    $lockedKey = "{$class->id}_{$plan->id}_";
+                    $alreadyPlaced = $lockedCounts[$lockedKey] ?? 0;
+                    $remaining = max(0, $plan->sessions_per_week - $alreadyPlaced);
+
+                    if ($remaining === 0) {
+                        continue;
+                    }
+
+                    $requests[] = new SessionRequest(
                         id: 0,
                         levelId: $plan->level_id,
                         classRoom: $class,
                         subjectPlan: $plan,
                         groupNumber: null,
-                        sessionsCount: $plan->sessions_per_week,
-                        minCapacity: $class->student_count,
+                        sessionsCount: $remaining,
+                        minCapacity: $minCapacity,
                         teacherIds: $teacherIds,
                         roomIds: $roomIds,
                     );
-                    $requests[] = $request;
                 }
             }
         }
 
         return $requests;
+    }
+
+    /**
+     * Compte les séances verrouillées par (classe, plan, groupe).
+     *
+     * @return array<string, int>
+     */
+    protected function countLockedSessions(?int $timetableId): array
+    {
+        if ($timetableId === null) {
+            return [];
+        }
+
+        $counts = [];
+        $locked = \App\Models\AcademicSession::where('timetable_id', $timetableId)
+            ->where('is_locked', true)
+            ->get(['class_room_id', 'subject_plan_id', 'group_number']);
+
+        foreach ($locked as $session) {
+            $group = $session->group_number ?? '';
+            $key = "{$session->class_room_id}_{$session->subject_plan_id}_{$group}";
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        return $counts;
     }
 
     /**

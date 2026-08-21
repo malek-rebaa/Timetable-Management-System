@@ -9,6 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $driver = DB::getDriverName();
+
         // La base réelle peut ne pas avoir l'ancien index unique (level_id, subject_id)
         // selon son historique. On ne le supprime que s'il existe.
         Schema::table('subject_plans', function (Blueprint $table) {
@@ -30,14 +32,18 @@ return new class extends Migration
         });
 
         // Garde-fous : volume et durée positifs (MariaDB >= 10.2 applique les CHECK)
-        DB::statement('ALTER TABLE subject_plans ADD CONSTRAINT subject_plans_sessions_per_week_check CHECK (sessions_per_week > 0)');
-        DB::statement('ALTER TABLE subject_plans ADD CONSTRAINT subject_plans_session_duration_check CHECK (session_duration > 0)');
+        if ($driver !== 'sqlite') {
+            DB::statement('ALTER TABLE subject_plans ADD CONSTRAINT subject_plans_sessions_per_week_check CHECK (sessions_per_week > 0)');
+            DB::statement('ALTER TABLE subject_plans ADD CONSTRAINT subject_plans_session_duration_check CHECK (session_duration > 0)');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE subject_plans DROP CONSTRAINT subject_plans_sessions_per_week_check');
-        DB::statement('ALTER TABLE subject_plans DROP CONSTRAINT subject_plans_session_duration_check');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE subject_plans DROP CONSTRAINT subject_plans_sessions_per_week_check');
+            DB::statement('ALTER TABLE subject_plans DROP CONSTRAINT subject_plans_session_duration_check');
+        }
 
         Schema::table('subject_plans', function (Blueprint $table) {
             $table->dropUnique('subject_plans_level_subject_type_unique');

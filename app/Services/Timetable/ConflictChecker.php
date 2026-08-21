@@ -78,8 +78,6 @@ class ConflictChecker implements ConstraintCheckerInterface
         $room = $candidate->room;
 
         if (! $room) {
-            // Salle optionnelle (cour à l'extérieur, etc.) : pas de vérification de type.
-            // La capacité est laissée à l'appréciation : pas de salle = pas de contrainte.
             return [];
         }
 
@@ -96,7 +94,10 @@ class ConflictChecker implements ConstraintCheckerInterface
         }
 
         $class = $candidate->classRoom;
-        $requiredCapacity = $class?->student_count ?? 0;
+        $tpGroups = (int) config('timetable.tp_groups', 2);
+        $requiredCapacity = $plan->teaching_type === 'TP'
+            ? (int) ceil(($class?->student_count ?? 0) / $tpGroups)
+            : ($class?->student_count ?? 0);
 
         if ($room->capacity < $requiredCapacity) {
             return [
@@ -114,6 +115,7 @@ class ConflictChecker implements ConstraintCheckerInterface
 
     /**
      * Règles de non-chevauchement : enseignant, salle, classe.
+     * Limité au même emploi du temps si timetable_id est défini.
      */
     public function checkOverlaps(AcademicSession $candidate, ?int $ignoreSessionId = null): array
     {
@@ -127,11 +129,14 @@ class ConflictChecker implements ConstraintCheckerInterface
             ->where('start_time', '<', $end)
             ->where('end_time', '>', $start);
 
+        if ($candidate->timetable_id) {
+            $query->where('timetable_id', $candidate->timetable_id);
+        }
+
         if ($ignoreSessionId) {
             $query->where('id', '!=', $ignoreSessionId);
         }
 
-        // 1. Enseignant déjà occupé
         $teacherOverlap = (clone $query)
             ->where('teacher_id', $candidate->teacher_id)
             ->exists();
@@ -140,7 +145,6 @@ class ConflictChecker implements ConstraintCheckerInterface
             $errors[] = "L'enseignant a déjà une séance sur ce créneau.";
         }
 
-        // 2. Salle déjà occupée
         if ($candidate->room_id) {
             $roomOverlap = (clone $query)
                 ->where('room_id', $candidate->room_id)
@@ -151,7 +155,6 @@ class ConflictChecker implements ConstraintCheckerInterface
             }
         }
 
-        // 3. Classe déjà occupée
         $classOverlap = (clone $query)
             ->where('class_room_id', $candidate->class_room_id)
             ->exists();

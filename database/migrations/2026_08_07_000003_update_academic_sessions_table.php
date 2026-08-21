@@ -9,6 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $driver = DB::getDriverName();
+
         Schema::table('academic_sessions', function (Blueprint $table) {
             // Rattachement à une génération d'emploi du temps (nullable : saisie manuelle sans timetable)
             $table->foreignId('timetable_id')->nullable()->after('id')->constrained()->nullOnDelete();
@@ -21,10 +23,14 @@ return new class extends Migration
         });
 
         // Filet de sécurité : une séance ne peut pas finir avant de commencer
-        DB::statement('ALTER TABLE academic_sessions ADD CONSTRAINT academic_sessions_end_time_check CHECK (end_time > start_time)');
+        if ($driver !== 'sqlite') {
+            DB::statement('ALTER TABLE academic_sessions ADD CONSTRAINT academic_sessions_end_time_check CHECK (end_time > start_time)');
+        }
 
         // Bornage des groupes : NULL (THEORY) ou 1/2 (TP)
-        DB::statement('ALTER TABLE academic_sessions ADD CONSTRAINT academic_sessions_group_number_check CHECK (group_number IS NULL OR group_number IN (1, 2))');
+        if ($driver !== 'sqlite') {
+            DB::statement('ALTER TABLE academic_sessions ADD CONSTRAINT academic_sessions_group_number_check CHECK (group_number IS NULL OR group_number IN (1, 2))');
+        }
 
         Schema::table('academic_sessions', function (Blueprint $table) {
             // Index composites de détection de conflit (non-chevauchement)
@@ -38,8 +44,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE academic_sessions DROP CONSTRAINT academic_sessions_end_time_check');
-        DB::statement('ALTER TABLE academic_sessions DROP CONSTRAINT academic_sessions_group_number_check');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE academic_sessions DROP CONSTRAINT academic_sessions_end_time_check');
+            DB::statement('ALTER TABLE academic_sessions DROP CONSTRAINT academic_sessions_group_number_check');
+        }
 
         Schema::table('academic_sessions', function (Blueprint $table) {
             $table->dropForeign(['timetable_id']);
