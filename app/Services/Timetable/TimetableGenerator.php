@@ -10,7 +10,6 @@ use App\Models\Timetable;
 use App\Models\User;
 use App\Services\Timetable\DTO\PlacedSession;
 use App\Services\Timetable\Strategies\GreedyPlacementStrategy;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Orchestrateur de génération d'emploi du temps.
@@ -68,7 +67,7 @@ class TimetableGenerator
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $this->registry = new OccupancyRegistry($this->grid);
-            $strategy = new GreedyPlacementStrategy($this->registry, $this->grid, $this->conflictChecker);
+            $strategy = new GreedyPlacementStrategy($this->registry, $this->grid);
 
             // Load locked sessions into the NEW registry instance
             $this->loadLockedSessions($timetable);
@@ -195,9 +194,11 @@ class TimetableGenerator
                 continue;
             }
 
-            $eligible = DB::table('teacher_subject')
-                ->where('teacher_id', $ps->teacherId)
-                ->where('subject_id', $plan->subject_id)
+            $eligible = User::query()
+                ->whereKey($ps->teacherId)
+                ->where('role', 'TEACHER')
+                ->where('is_active', true)
+                ->whereHas('subjects', fn ($query) => $query->whereKey($plan->subject_id))
                 ->exists();
 
             if (! $eligible) {
@@ -309,7 +310,7 @@ class TimetableGenerator
 
         foreach ($lockedSessions as $session) {
             $startIndex = $this->grid->indexOf($session->day, $session->start_time);
-            if ($startIndex === null || $session->room_id === null) {
+            if ($startIndex === null) {
                 continue;
             }
 

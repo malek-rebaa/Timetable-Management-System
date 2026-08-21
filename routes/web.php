@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoomManagementController;
+use App\Http\Controllers\SubjectManagementController;
 use App\Http\Controllers\TeacherManagementController;
 use App\Http\Controllers\TimetableController;
 use Illuminate\Support\Facades\Route;
@@ -67,11 +70,27 @@ Route::middleware('auth')->group(function () {
         Route::put('/teachers/{teacher}', [TeacherManagementController::class, 'update'])->name('teachers.update');
         Route::put('/teachers/{teacher}/reset-password', [TeacherManagementController::class, 'resetPassword'])->name('teachers.reset-password');
         Route::delete('/teachers/{teacher}', [TeacherManagementController::class, 'destroy'])->name('teachers.destroy');
+
+        Route::resource('levels', AcademicStructureController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/classes', [AcademicStructureController::class, 'storeClass'])->name('classes.store');
+        Route::put('/classes/{classRoom}', [AcademicStructureController::class, 'updateClass'])->name('classes.update');
+        Route::delete('/classes/{classRoom}', [AcademicStructureController::class, 'destroyClass'])->name('classes.destroy');
+
+        Route::resource('subjects', SubjectManagementController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/subject-plans', [SubjectManagementController::class, 'storePlan'])->name('subject-plans.store');
+        Route::put('/subject-plans/{subjectPlan}', [SubjectManagementController::class, 'updatePlan'])->name('subject-plans.update');
+        Route::delete('/subject-plans/{subjectPlan}', [SubjectManagementController::class, 'destroyPlan'])->name('subject-plans.destroy');
+
+        Route::resource('rooms', RoomManagementController::class)->only(['index', 'store', 'update', 'destroy']);
     });
 
-    // CRUD placeholders (existing)
+    // Consultation : an enseignant only sees their own sessions (filtered in the controller).
     Route::prefix('timetable')->name('timetable.')->group(function () {
         Route::get('/', [TimetableController::class, 'index'])->name('index');
+    });
+
+    // Only administrators can edit or generate timetables.
+    Route::middleware(['role:SUPER_ADMIN,ADMIN'])->prefix('timetable')->name('timetable.')->group(function () {
         Route::post('/sessions', [TimetableController::class, 'storeSession'])->name('sessions.store');
         Route::put('/sessions/{session}', [TimetableController::class, 'updateSession'])->name('sessions.update');
         Route::delete('/sessions/{session}', [TimetableController::class, 'destroySession'])->name('sessions.destroy');
@@ -80,17 +99,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/timetables/{timetable}', [TimetableController::class, 'destroyTimetable'])->name('destroy');
     });
 
-    Route::get('/levels', function () {
-        return view('levels.index');
-    })->name('levels.index');
-
-    Route::get('/subjects', function () {
-        return view('subjects.index');
-    })->name('subjects.index');
-
-    Route::get('/rooms', function () {
-        return view('rooms.index');
-    })->name('rooms.index');
 });
 
 /*

@@ -21,6 +21,10 @@ use App\Services\Timetable\Contracts\ConstraintCheckerInterface;
  */
 class ConflictChecker implements ConstraintCheckerInterface
 {
+    public function __construct(protected SlotGrid $grid)
+    {
+    }
+
     /**
      * Vérifie toutes les contraintes pour une séance candidate.
      *
@@ -36,6 +40,8 @@ class ConflictChecker implements ConstraintCheckerInterface
         $errors = array_merge($errors, $this->checkRoom($candidate));
         $errors = array_merge($errors, $this->checkOverlaps($candidate, $ignoreSessionId));
         $errors = array_merge($errors, $this->checkGroupConsistency($candidate));
+        $errors = array_merge($errors, $this->checkClassRoomCompatibility($candidate));
+        $errors = array_merge($errors, $this->checkDurationAndGrid($candidate));
 
         return $errors;
     }
@@ -50,6 +56,10 @@ class ConflictChecker implements ConstraintCheckerInterface
 
         if (! $plan) {
             return ['Le plan de cours est introuvable.'];
+        }
+
+        if (User::find($candidate->teacher_id)?->role !== 'TEACHER') {
+            return ['La séance doit être assurée par un enseignant.'];
         }
 
         $isEligible = \DB::table('teacher_subject')
@@ -78,7 +88,7 @@ class ConflictChecker implements ConstraintCheckerInterface
         $room = $candidate->room;
 
         if (! $room) {
-            return [];
+            return ['Une salle est obligatoire pour chaque séance.'];
         }
 
         $allowed = config("timetable.room_types.{$plan->teaching_type}", []);
@@ -193,6 +203,39 @@ class ConflictChecker implements ConstraintCheckerInterface
     /**
      * Vérifie si une salle est compatible pour un type d'enseignement donné.
      */
+    public function checkClassRoomCompatibility(AcademicSession $candidate): array
+    {
+        $plan = $candidate->subjectPlan;
+        $classRoom = $candidate->classRoom;
+
+        if ($plan && $classRoom && $plan->level_id !== $classRoom->level_id) {
+            return ['Le plan de cours ne correspond pas au niveau de cette classe.'];
+        }
+
+        return [];
+    }
+
+    public function checkDurationAndGrid(AcademicSession $candidate): array
+    {
+        $plan = $candidate->subjectPlan;
+        if (! $plan || ! $candidate->day || ! $candidate->start_time || ! $candidate->end_time) {
+            return [];
+        }
+
+        $duration = (int) \Carbon\Carbon::parse($candidate->start_time)
+            ->diffInMinutes(\Carbon\Carbon::parse($candidate->end_time), true);
+
+        if ($duration !== (int) $plan->session_duration) {
+            return [sprintf('La durée de la séance doit être de %d minutes.', $plan->session_duration)];
+        }
+
+        if (! $this->grid->isValidSpan($candidate->day, $candidate->start_time, $candidate->end_time, $duration)) {
+            return ['Le créneau doit être aligné sur la grille et ne peut pas traverser une pause.'];
+        }
+
+        return [];
+    }
+
     public function isRoomCompatible(Room $room, string $teachingType): bool
     {
         return in_array($room->type, config("timetable.room_types.{$teachingType}", []), true);

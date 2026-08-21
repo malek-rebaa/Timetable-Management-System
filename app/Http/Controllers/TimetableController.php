@@ -11,6 +11,7 @@ use App\Models\Timetable;
 use App\Models\User;
 use App\Services\Timetable\SlotGrid;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TimetableController extends Controller
 {
@@ -29,6 +30,9 @@ class TimetableController extends Controller
 
         $sessions = AcademicSession::query()
             ->with(['subjectPlan.subject', 'teacher', 'classRoom.level', 'room'])
+            ->when($request->user()->role === 'TEACHER', function ($q) use ($request) {
+                $q->where('teacher_id', $request->user()->id);
+            })
             ->when($request->filled('timetable_id'), function ($q) use ($request) {
                 $q->where('timetable_id', $request->timetable_id);
             })
@@ -140,59 +144,40 @@ class TimetableController extends Controller
         $timetable->save();
         $timetableId = $timetable->id;
 
-        try {
-            $generator = app(\App\Services\Timetable\TimetableGenerator::class);
-            $options = [
-                'name' => $validated['name'] ?? null,
-                'academic_year' => $validated['academic_year'] ?? null,
-                'semester' => $validated['semester'] ?? null,
-            ];
-            
-            if ($classRoomId) {
-                $options['class_room_ids'] = [(int) $classRoomId];
-            }
+        $options = [
+            'name' => $validated['name'] ?? null,
+            'academic_year' => $validated['academic_year'] ?? null,
+            'semester' => $validated['semester'] ?? null,
+        ];
 
-            $result = $generator->generate($timetable, $options);
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => $result['success'],
-                    'message' => $result['success'] ? 'Génération réussie' : 'Échec de la génération',
-                    'timetable_id' => $timetableId,
-                    'status' => $timetable->status,
-                    'errors' => $result['errors'] ?? [],
-                    'diagnostics' => $result['diagnostics'] ?? [],
-                ]);
-            }
-
-            if ($result['success']) {
-                return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
-                    ->with('generation_success', "Génération réussie : {$result['placed']} séances placées.");
-            } else {
-                return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
-                    ->with('generation_errors', $result['errors']);
-            }
-        } catch (\Throwable $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => ['Erreur lors de la génération : ' . $e->getMessage()]
-                ], 500);
-            }
-
-            return redirect()->route('timetable.index')
-                ->with('generation_errors', ['Erreur: ' . $e->getMessage()]);
+        if ($classRoomId) {
+            $options['class_room_id'] = (int) $classRoomId;
         }
+
+        GenerateTimetableJob::dispatch($timetableId, $options);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Génération mise en file d'attente.",
+                'timetable_id' => $timetableId,
+                'status' => 'PENDING',
+            ], 202);
+        }
+
+        return redirect()->route('timetable.index', ['timetable_id' => $timetableId])
+            ->with('generation_success', "Génération mise en file d'attente.");
     }
 
     /**
-     * Supprime un emploi du temps (ses séances non verrouillées).
+     * Supprime un emploi du temps et toutes ses séances, même verrouillées.
      */
     public function destroyTimetable(Timetable $timetable)
     {
-        $commitService = app(\App\Services\Timetable\TimetableCommitService::class);
-        $commitService->clearTimetable($timetable);
-        $timetable->delete();
+        DB::transaction(function () use ($timetable) {
+            $timetable->academicSessions()->delete();
+            $timetable->delete();
+        });
 
         return redirect()->route('timetable.index')
             ->with('generation_success', 'Emploi du temps supprimé.');

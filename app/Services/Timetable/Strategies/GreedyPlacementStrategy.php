@@ -2,7 +2,6 @@
 
 namespace App\Services\Timetable\Strategies;
 
-use App\Services\Timetable\ConflictChecker;
 use App\Services\Timetable\DTO\PlacedSession;
 use App\Services\Timetable\DTO\SessionRequest;
 use App\Services\Timetable\OccupancyRegistry;
@@ -15,7 +14,6 @@ class GreedyPlacementStrategy
     public function __construct(
         protected OccupancyRegistry $registry,
         protected SlotGrid $grid,
-        protected ConflictChecker $conflictChecker
     ) {
     }
 

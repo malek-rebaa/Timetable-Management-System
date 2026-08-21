@@ -30,7 +30,7 @@ class MemoryOccupancyTest extends TestCase
         $this->assertTrue($registry->isTeacherFree(1, 'MONDAY', 0, 4)); // 4 slots = 2 heures
 
         // On réserve 4 créneaux (index 0 à 3) pour le prof 1
-        $registry->book(1, 10, 100, 'MONDAY', 0, 4);
+        $registry->book(1, 10, 100, null, 'MONDAY', 0, 4);
 
         // Le prof n'est plus libre sur ces créneaux
         $this->assertFalse($registry->isTeacherFree(1, 'MONDAY', 0, 4));
@@ -40,7 +40,7 @@ class MemoryOccupancyTest extends TestCase
 
         // Les salles et classes sont aussi réservées
         $this->assertFalse($registry->isRoomFree(10, 'MONDAY', 0, 4));
-        $this->assertFalse($registry->isClassFree(100, 'MONDAY', 0, 4));
+        $this->assertFalse($registry->isClassFree(100, null, 'MONDAY', 0, 4));
 
         // Mais libres les autres jours
         $this->assertTrue($registry->isTeacherFree(1, 'TUESDAY', 0, 4));
@@ -50,10 +50,10 @@ class MemoryOccupancyTest extends TestCase
     {
         $registry = new OccupancyRegistry($this->grid);
 
-        $registry->book(1, 10, 100, 'MONDAY', 2, 2);
+        $registry->book(1, 10, 100, null, 'MONDAY', 2, 2);
         $this->assertFalse($registry->isTeacherFree(1, 'MONDAY', 2, 2));
 
-        $registry->unbook(1, 10, 100, 'MONDAY', 2, 2);
+        $registry->unbook(1, 10, 100, null, 'MONDAY', 2, 2);
         $this->assertTrue($registry->isTeacherFree(1, 'MONDAY', 2, 2));
     }
 }

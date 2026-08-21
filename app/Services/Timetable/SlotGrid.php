@@ -56,6 +56,10 @@ class SlotGrid
         while ($cursor->lessThan($end)) {
             $slotEnd = $cursor->copy()->addMinutes($this->slotStep);
 
+            if ($slotEnd->greaterThan($end)) {
+                break;
+            }
+
             // Si le créneau tombe dans une pause, on le saute
             if (! $this->isInBreak($cursor, $slotEnd)) {
                 foreach ($this->days as $day) {
@@ -93,6 +97,10 @@ class SlotGrid
      */
     public function durationToSlots(int $minutes): int
     {
+        if ($minutes <= 0 || $minutes % $this->slotStep !== 0) {
+            return 0;
+        }
+
         return intdiv($minutes, $this->slotStep);
     }
 
@@ -149,7 +157,8 @@ class SlotGrid
             return false;
         }
 
-        return $slots[$lastIndex]['end'] === $endTime;
+        return $this->isContiguous($day, $startIndex, $needed)
+            && $slots[$lastIndex]['end'] === $this->normalizeTime($endTime);
     }
 
     public function slotStart(string $day, int $index): ?string

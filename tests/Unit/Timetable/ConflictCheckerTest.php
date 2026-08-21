@@ -123,4 +123,36 @@ class ConflictCheckerTest extends TestCase
         $this->assertCount(1, $errors);
         $this->assertStringContainsString('insuffisante pour 50 étudiants', $errors[0]);
     }
+    public function test_it_rejects_a_session_that_crosses_a_break()
+    {
+        $level = Level::factory()->create();
+        $class = ClassRoom::factory()->create(['level_id' => $level->id, 'student_count' => 20]);
+        $room = Room::factory()->create(['capacity' => 30, 'type' => 'CLASSROOM']);
+        $subject = Subject::factory()->create();
+        $teacher = User::factory()->teacher()->create();
+        $teacher->subjects()->attach($subject->id);
+        $plan = SubjectPlan::factory()->create([
+            'level_id' => $level->id,
+            'subject_id' => $subject->id,
+            'session_duration' => 90,
+            'teaching_type' => 'THEORY',
+        ]);
+
+        $candidate = new AcademicSession([
+            'teacher_id' => $teacher->id,
+            'class_room_id' => $class->id,
+            'room_id' => $room->id,
+            'day' => 'MONDAY',
+            'start_time' => '11:30',
+            'end_time' => '13:00',
+            'group_number' => null,
+        ]);
+        $candidate->setRelation('subjectPlan', $plan);
+        $candidate->setRelation('classRoom', $class);
+        $candidate->setRelation('room', $room);
+
+        $errors = $this->checker->check($candidate);
+
+        $this->assertContains('Le créneau doit être aligné sur la grille et ne peut pas traverser une pause.', $errors);
+    }
 }

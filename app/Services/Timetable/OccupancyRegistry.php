@@ -32,12 +32,14 @@ class OccupancyRegistry
     /**
      * Marque une occupation pour les 3 ressources.
      */
-    public function book(int $teacherId, int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
+    public function book(int $teacherId, ?int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
     {
         $mask = $this->spanMask($startIndex, $slots);
 
         $this->teacherBusy[$teacherId][$day] = ($this->teacherBusy[$teacherId][$day] ?? 0) | $mask;
-        $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) | $mask;
+        if ($roomId !== null) {
+            $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) | $mask;
+        }
         
         $groupKey = $groupNumber ?? 'ALL';
         $this->classBusy[$classId][$groupKey][$day] = ($this->classBusy[$classId][$groupKey][$day] ?? 0) | $mask;
@@ -48,13 +50,15 @@ class OccupancyRegistry
     /**
      * Retire une occupation (pour la réparation / backtracking).
      */
-    public function unbook(int $teacherId, int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
+    public function unbook(int $teacherId, ?int $roomId, int $classId, ?int $groupNumber, string $day, int $startIndex, int $slots): void
     {
         $mask = $this->spanMask($startIndex, $slots);
         $clear = ~$mask;
 
         $this->teacherBusy[$teacherId][$day] = ($this->teacherBusy[$teacherId][$day] ?? 0) & $clear;
-        $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) & $clear;
+        if ($roomId !== null) {
+            $this->roomBusy[$roomId][$day] = ($this->roomBusy[$roomId][$day] ?? 0) & $clear;
+        }
         
         $groupKey = $groupNumber ?? 'ALL';
         $this->classBusy[$classId][$groupKey][$day] = ($this->classBusy[$classId][$groupKey][$day] ?? 0) & $clear;
@@ -81,6 +85,16 @@ class OccupancyRegistry
                 return false;
             }
             // Puis vérifier ce groupe spécifique
+            if (! config('timetable.parallel_tp_groups', false)) {
+                foreach ($this->classBusy[$classId] ?? [] as $days) {
+                    if (! $this->isFree($days[$day] ?? 0, $startIndex, $slots)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             return $this->isFree($this->classBusy[$classId][$groupNumber][$day] ?? 0, $startIndex, $slots);
         }
 

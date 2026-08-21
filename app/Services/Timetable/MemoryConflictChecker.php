@@ -72,7 +72,7 @@ class MemoryConflictChecker implements ConstraintCheckerInterface
             $errors[] = 'La salle est déjà occupée sur ce créneau.';
         }
 
-        if ($candidate->class_room_id && !$this->registry->isClassFree($candidate->class_room_id, $day, $startIndex, $slots)) {
+        if ($candidate->class_room_id && ! $this->registry->isClassFree($candidate->class_room_id, $candidate->group_number, $day, $startIndex, $slots)) {
             $errors[] = 'La classe a déjà une séance sur ce créneau.';
         }
 

@@ -63,6 +63,18 @@
                 </x-form.select>
             @endif
 
+            @unless(auth()->user()->role === 'TEACHER')
+            @if($selectedTimetable)
+                <form method="POST" action="{{ route('timetable.destroy', $selectedTimetable) }}"
+                    onsubmit="return confirm('Supprimer cet emploi du temps et toutes ses séances, y compris les séances verrouillées ?');">
+                    @csrf
+                    @method('DELETE')
+                    <x-form.button type="submit" variant="danger">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Supprimer
+                    </x-form.button>
+                </form>
+            @endif
+
             <x-form.button variant="primary"
                 @click="$dispatch('open-modal', 'add-session')">
                 <i data-lucide="plus" class="w-4 h-4"></i> Nouvelle Séance
@@ -73,6 +85,7 @@
                 >
                 <i data-lucide="zap" class="w-4 h-4"></i> Générer
             </x-form.button>
+            @endunless
         </div>
     </div>
 
@@ -110,10 +123,30 @@
     @endif
 
     {{-- Grille d'emploi du temps --}}
+    @php
+        $showAllClasses = ! request()->filled('filter_class');
+        $timetableGroups = $showAllClasses
+            ? $classRooms->mapWithKeys(fn ($classRoom) => [
+                $classRoom->id => $sessions->where('class_room_id', $classRoom->id),
+            ])
+            : collect([null => $sessions]);
+    @endphp
+
+    <div class="space-y-6">
+    @foreach($timetableGroups as $classRoomId => $classSessions)
+        @if($showAllClasses)
+            @php
+                $classRoom = $classRooms->firstWhere('id', $classRoomId);
+            @endphp
+            <h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white">
+                {{ $classRoom->name }}
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ $classRoom->level->name }})</span>
+            </h3>
+        @endif
     <x-ui.card>
         <div class="overflow-x-auto">
             <div class="min-w-[800px]">
-                @if(isset($sessions) && $sessions->count() > 0)
+                @if($classSessions->isNotEmpty())
                     @php
                         // Regrouper les séances par jour puis par créneau
                         $slotsPerDay = $grid->slotsPerDay;
@@ -129,7 +162,7 @@
                             $organized[$day] = array_fill(0, $maxSlots, []);
                         }
 
-                        foreach($sessions as $session) {
+                        foreach($classSessions as $session) {
                             $normalizedStart = \Carbon\Carbon::parse($session->start_time)->format('H:i');
                             $startSlot = $grid->indexOf($session->day, $normalizedStart);
                             $duration = $grid->durationToSlots($session->subjectPlan->session_duration ?? 120);
@@ -142,7 +175,7 @@
 
                         // Déterminer les séances uniques par créneau de début
                         $uniqueByStart = [];
-                        foreach($sessions as $session) {
+                        foreach($classSessions as $session) {
                             $key = $session->day . '|' . \Carbon\Carbon::parse($session->start_time)->format('H:i');
                             if (!isset($uniqueByStart[$key])) {
                                 $uniqueByStart[$key] = [];
@@ -216,12 +249,13 @@
                     </div>
                 @else
                     {{-- Pas de séances --}}
-                    <div class="py-16 text-center">
+                    <div class="{{ $showAllClasses ? 'py-10' : 'py-16' }} text-center">
                         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
                             <i data-lucide="calendar" class="w-8 h-8 text-gray-400"></i>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Aucune séance</h3>
                         <p class="text-sm text-gray-500 mb-4">Ajoutez une séance manuellement ou générez un emploi du temps.</p>
+                        @unless($showAllClasses || auth()->user()->role === 'TEACHER')
                         <div class="flex justify-center gap-2">
                             <x-form.button variant="primary"
                                 @click="$dispatch('open-modal', 'add-session')">
@@ -231,14 +265,18 @@
                                 <i data-lucide="zap" class="w-4 h-4"></i> Générer automatiquement
                             </x-form.button>
                         </div>
+                        @endunless
                     </div>
                 @endif
             </div>
         </div>
     </x-ui.card>
+    @endforeach
+    </div>
 
     {{-- Modal: Nouvelle séance --}}
     <x-ui.modal name="add-session" title="Nouvelle séance" :maxWidth="'lg'">
+        @unless(auth()->user()->role === 'TEACHER')
         <form action="{{ route('timetable.sessions.store') }}" method="POST">
             @csrf
             @if(request('timetable_id'))
@@ -367,6 +405,7 @@
                 </x-form.button>
             </div>
         </form>
+        @endunless
     </x-ui.modal>
 
     {{-- Script génération --}}

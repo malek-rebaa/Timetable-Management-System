@@ -1,73 +1,41 @@
 <x-layout.app>
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-title-md font-semibold text-gray-800 dark:text-white">
-            Matières & Programme Pédagogique
-        </h2>
-        
-        <x-form.button variant="primary" x-data @click="$dispatch('open-modal', 'create-subject')">
-            <i data-lucide="plus" class="w-4 h-4"></i> Nouvelle Matière
-        </x-form.button>
+        <div><h2 class="text-title-md font-semibold text-gray-800 dark:text-white">Matières et programmes</h2><p class="mt-1 text-sm text-gray-500">Définissez ce qui est enseigné pour chaque niveau.</p></div>
+        <div class="flex gap-2"><x-form.button variant="secondary" x-data @click="$dispatch('open-modal', 'create-subject')"><i data-lucide="book-plus" class="w-4 h-4"></i> Nouvelle matière</x-form.button><x-form.button x-data @click="$dispatch('open-modal', 'create-plan')"><i data-lucide="clipboard-plus" class="w-4 h-4"></i> Nouveau programme</x-form.button></div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <!-- Matières -->
-        <div class="xl:col-span-1">
-            <x-ui.card>
-                <x-slot:header>
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Matières</h3>
-                </x-slot:header>
-                <ul class="divide-y divide-gray-200 dark:divide-gray-800">
-                    <li class="py-3 flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-800 dark:text-white">Mathématiques</span>
-                        <button class="text-brand-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                    </li>
-                    <li class="py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 px-2 rounded -mx-2">
-                        <span class="text-sm font-medium text-brand-600 dark:text-brand-400">Réseaux</span>
-                        <button class="text-brand-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                    </li>
-                    <li class="py-3 flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-800 dark:text-white">Développement Web</span>
-                        <button class="text-brand-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                    </li>
-                </ul>
-            </x-ui.card>
-        </div>
+    @if(session('success'))<div class="mb-4 rounded-lg border border-success-200 bg-success-50 p-3 text-sm text-success-700">{{ session('success') }}</div>@endif
+    @if(session('error') || $errors->any())<div class="mb-4 rounded-lg border border-error-200 bg-error-50 p-3 text-sm text-error-700">{{ session('error') ?? $errors->first() }}</div>@endif
 
-        <!-- Subject Plan -->
-        <div class="xl:col-span-2">
-            <x-ui.card>
-                <x-slot:header>
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Programme de : Réseaux</h3>
-                        <x-form.button variant="secondary" class="py-1.5 px-3 text-xs">
-                            <i data-lucide="plus" class="w-3 h-3"></i> Ajouter au plan
-                        </x-form.button>
-                    </div>
-                </x-slot:header>
-                
-                <x-ui.table :headers="['Niveau', 'Type', 'Volume/Sem', 'Séances/Sem', 'Durée', 'Actions']">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <x-ui.card>
+            <x-slot:header><h3 class="text-lg font-semibold text-gray-800 dark:text-white">Matières</h3></x-slot:header>
+            <x-ui.table :headers="['Matière', 'Plans', 'Professeurs', 'Actions']">
+                @forelse($subjects as $subject)
+                    <tr><td class="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white">{{ $subject->name }}</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $subject->subject_plans_count }}</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $subject->teachers_count }}</td><td class="px-5 py-4"><div class="flex gap-3"><button class="text-brand-500 hover:text-brand-600" x-data @click="$dispatch('open-modal', 'edit-subject-{{ $subject->id }}')"><i data-lucide="edit-2" class="h-4 w-4"></i></button><form method="POST" action="{{ route('subjects.destroy', $subject) }}" onsubmit="return confirm('Supprimer cette matière ?');">@csrf @method('DELETE')<button class="text-error-500 hover:text-error-600" @disabled($subject->subject_plans_count || $subject->teachers_count)><i data-lucide="trash-2" class="h-4 w-4"></i></button></form></div></td></tr>
+                    <x-ui.modal name="edit-subject-{{ $subject->id }}" title="Modifier la matière" maxWidth="md"><form method="POST" action="{{ route('subjects.update', $subject) }}" class="space-y-4">@csrf @method('PUT')<div><label class="mb-1 block text-sm font-medium">Nom</label><x-form.input name="name" value="{{ $subject->name }}" required /></div><div class="flex justify-end gap-2"><x-form.button type="button" variant="secondary" @click="$dispatch('close-modal', 'edit-subject-{{ $subject->id }}')">Annuler</x-form.button><x-form.button type="submit">Enregistrer</x-form.button></div></form></x-ui.modal>
+                @empty
+                    <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-gray-500">Aucune matière enregistrée.</td></tr>
+                @endforelse
+            </x-ui.table>
+        </x-ui.card>
+
+        <div class="xl:col-span-2"><x-ui.card>
+            <x-slot:header><h3 class="text-lg font-semibold text-gray-800 dark:text-white">Programmes pédagogiques</h3></x-slot:header>
+            <x-ui.table :headers="['Niveau', 'Matière', 'Type', 'Séances', 'Durée', 'Volume', 'Séances créées', 'Actions']">
+                @forelse($subjectPlans as $subjectPlan)
                     <tr>
-                        <td class="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white">Niveau 1</td>
-                        <td class="px-5 py-4 text-sm text-brand-600 font-semibold">THEORY</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">4 h</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">2</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">2 h</td>
-                        <td class="px-5 py-4">
-                            <button class="text-brand-500 hover:text-brand-600"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                        </td>
+                        <td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $subjectPlan->level->name }}</td><td class="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white">{{ $subjectPlan->subject->name }}</td><td class="px-5 py-4 text-sm font-semibold {{ $subjectPlan->teaching_type === 'TP' ? 'text-success-600' : 'text-brand-600' }}">{{ $subjectPlan->teaching_type }}</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $subjectPlan->sessions_per_week }}/sem.</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $subjectPlan->session_duration }} min</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ rtrim(rtrim(number_format($subjectPlan->weekly_hours / 60, 2, '.', ''), '0'), '.') }} h</td><td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $subjectPlan->academic_sessions_count }}</td>
+                        <td class="px-5 py-4"><div class="flex gap-3"><button class="text-brand-500 hover:text-brand-600" x-data @click="$dispatch('open-modal', 'edit-plan-{{ $subjectPlan->id }}')"><i data-lucide="edit-2" class="h-4 w-4"></i></button><form method="POST" action="{{ route('subject-plans.destroy', $subjectPlan) }}" onsubmit="return confirm('Supprimer ce programme ?');">@csrf @method('DELETE')<button class="text-error-500 hover:text-error-600" @disabled($subjectPlan->academic_sessions_count)><i data-lucide="trash-2" class="h-4 w-4"></i></button></form></div></td>
                     </tr>
-                    <tr>
-                        <td class="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white">Niveau 2</td>
-                        <td class="px-5 py-4 text-sm text-success-600 font-semibold">TP</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">6 h</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">2</td>
-                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">3 h</td>
-                        <td class="px-5 py-4">
-                            <button class="text-brand-500 hover:text-brand-600"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                </x-ui.table>
-            </x-ui.card>
-        </div>
+                    <x-ui.modal name="edit-plan-{{ $subjectPlan->id }}" title="Modifier le programme" maxWidth="lg"><form method="POST" action="{{ route('subject-plans.update', $subjectPlan) }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2">@csrf @method('PUT')<div><label class="mb-1 block text-sm font-medium">Niveau</label><x-form.select name="level_id" required>@foreach($levels as $level)<option value="{{ $level->id }}" @selected($subjectPlan->level_id === $level->id)>{{ $level->name }}</option>@endforeach</x-form.select></div><div><label class="mb-1 block text-sm font-medium">Matière</label><x-form.select name="subject_id" required>@foreach($subjects as $subject)<option value="{{ $subject->id }}" @selected($subjectPlan->subject_id === $subject->id)>{{ $subject->name }}</option>@endforeach</x-form.select></div><div><label class="mb-1 block text-sm font-medium">Type</label><x-form.select name="teaching_type" required><option value="THEORY" @selected($subjectPlan->teaching_type === 'THEORY')>THEORY</option><option value="TP" @selected($subjectPlan->teaching_type === 'TP')>TP</option></x-form.select></div><div><label class="mb-1 block text-sm font-medium">Séances par semaine</label><x-form.input type="number" min="1" max="20" name="sessions_per_week" value="{{ $subjectPlan->sessions_per_week }}" required /></div><div><label class="mb-1 block text-sm font-medium">Durée (minutes)</label><x-form.input type="number" min="30" step="30" name="session_duration" value="{{ $subjectPlan->session_duration }}" required /></div><div class="flex items-end justify-end gap-2"><x-form.button type="button" variant="secondary" @click="$dispatch('close-modal', 'edit-plan-{{ $subjectPlan->id }}')">Annuler</x-form.button><x-form.button type="submit">Enregistrer</x-form.button></div></form></x-ui.modal>
+                @empty
+                    <tr><td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">Aucun programme pédagogique enregistré.</td></tr>
+                @endforelse
+            </x-ui.table>
+        </x-ui.card></div>
     </div>
+
+    <x-ui.modal name="create-subject" title="Nouvelle matière" maxWidth="md"><form method="POST" action="{{ route('subjects.store') }}" class="space-y-4">@csrf<div><label class="mb-1 block text-sm font-medium">Nom</label><x-form.input name="name" placeholder="Ex. Mathématiques" required /></div><div class="flex justify-end gap-2"><x-form.button type="button" variant="secondary" @click="$dispatch('close-modal', 'create-subject')">Annuler</x-form.button><x-form.button type="submit">Créer</x-form.button></div></form></x-ui.modal>
+    <x-ui.modal name="create-plan" title="Nouveau programme pédagogique" maxWidth="lg"><form method="POST" action="{{ route('subject-plans.store') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2">@csrf<div><label class="mb-1 block text-sm font-medium">Niveau</label><x-form.select name="level_id" required><option value="">Sélectionner</option>@foreach($levels as $level)<option value="{{ $level->id }}">{{ $level->name }}</option>@endforeach</x-form.select></div><div><label class="mb-1 block text-sm font-medium">Matière</label><x-form.select name="subject_id" required><option value="">Sélectionner</option>@foreach($subjects as $subject)<option value="{{ $subject->id }}">{{ $subject->name }}</option>@endforeach</x-form.select></div><div><label class="mb-1 block text-sm font-medium">Type</label><x-form.select name="teaching_type" required><option value="THEORY">THEORY</option><option value="TP">TP</option></x-form.select></div><div><label class="mb-1 block text-sm font-medium">Séances par semaine</label><x-form.input type="number" min="1" max="20" name="sessions_per_week" value="1" required /></div><div><label class="mb-1 block text-sm font-medium">Durée (minutes)</label><x-form.input type="number" min="30" step="30" name="session_duration" value="60" required /></div><div class="flex items-end justify-end gap-2"><x-form.button type="button" variant="secondary" @click="$dispatch('close-modal', 'create-plan')">Annuler</x-form.button><x-form.button type="submit">Créer</x-form.button></div></form></x-ui.modal>
 </x-layout.app>

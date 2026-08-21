@@ -119,6 +119,13 @@ class OccupancyRegistryTest extends TestCase
         );
     }
 
+    public function test_tp_groups_cannot_overlap_by_default()
+    {
+        $this->registry->book(1, 1, 1, 1, 'MONDAY', 0, 3);
+
+        $this->assertFalse($this->registry->isClassFree(1, 2, 'MONDAY', 0, 3));
+    }
+
     /**
      * TEST 5: Teacher conflict detection
      */

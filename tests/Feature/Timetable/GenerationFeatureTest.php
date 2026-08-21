@@ -3,6 +3,7 @@
 namespace Tests\Feature\Timetable;
 
 use App\Jobs\GenerateTimetableJob;
+use App\Models\AcademicSession;
 use App\Models\ClassRoom;
 use App\Models\Level;
 use App\Models\Room;
@@ -123,6 +124,36 @@ class GenerationFeatureTest extends TestCase
         $this->assertSame('FAILED', $timetable->fresh()->status);
     }
 
+    public function test_generation_only_assigns_active_teachers_linked_to_the_subject()
+    {
+        $level = Level::factory()->create();
+        $class = ClassRoom::factory()->create(['level_id' => $level->id, 'student_count' => 28]);
+        $subject = Subject::factory()->create();
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        // An administrator may be present in the pivot by bad legacy data,
+        // but must never be selected to teach a session.
+        $admin->subjects()->attach($subject->id);
+        $teacher->subjects()->attach($subject->id);
+
+        SubjectPlan::factory()->create([
+            'level_id' => $level->id,
+            'subject_id' => $subject->id,
+            'sessions_per_week' => 1,
+            'session_duration' => 60,
+            'teaching_type' => 'THEORY',
+        ]);
+        Room::factory()->create(['type' => 'CLASSROOM', 'capacity' => 40]);
+        $timetable = Timetable::factory()->create();
+
+        $result = app(TimetableGenerator::class)->generate($timetable);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame([$teacher->id], $timetable->academicSessions()->pluck('teacher_id')->all());
+        $this->assertDatabaseMissing('academic_sessions', ['teacher_id' => $admin->id]);
+    }
+
     public function test_locked_sessions_are_preserved_during_regeneration()
     {
         $level = Level::factory()->create();
@@ -172,7 +203,7 @@ class GenerationFeatureTest extends TestCase
     {
         Queue::fake();
 
-        $user = User::factory()->teacher()->create();
+        $user = User::factory()->admin()->create();
         $this->actingAs($user);
 
         $level = Level::factory()->create();
@@ -193,5 +224,33 @@ class GenerationFeatureTest extends TestCase
         Queue::assertPushed(GenerateTimetableJob::class, function (GenerateTimetableJob $job) {
             return isset($job->timetableId) && ! empty($job->options['class_room_id']);
         });
+    }
+    public function test_teacher_cannot_start_a_generation()
+    {
+        $this->actingAs(User::factory()->teacher()->create());
+
+        $this->post(route('timetable.generate'))->assertForbidden();
+    }
+
+    public function test_deleting_a_timetable_deletes_all_its_sessions_including_locked_ones()
+    {
+        $admin = User::factory()->admin()->create();
+        $timetable = Timetable::factory()->create();
+        $lockedSession = AcademicSession::factory()->create([
+            'timetable_id' => $timetable->id,
+            'is_locked' => true,
+        ]);
+        $unlockedSession = AcademicSession::factory()->create([
+            'timetable_id' => $timetable->id,
+            'is_locked' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('timetable.destroy', $timetable))
+            ->assertRedirect(route('timetable.index'));
+
+        $this->assertDatabaseMissing('timetables', ['id' => $timetable->id]);
+        $this->assertDatabaseMissing('academic_sessions', ['id' => $lockedSession->id]);
+        $this->assertDatabaseMissing('academic_sessions', ['id' => $unlockedSession->id]);
     }
 }

@@ -119,6 +119,19 @@
                         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Téléphone</label>
                         <x-form.input type="text" name="phone" value="{{ $teacher->phone }}" placeholder="+216 XX XXX XXX" />
                     </div>
+                    <fieldset>
+                        <legend class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Matières enseignées</legend>
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            @foreach($subjects as $subject)
+                                <label class="flex items-center gap-2 rounded-lg border border-gray-200 p-2 text-sm dark:border-gray-700">
+                                    <input type="checkbox" name="subject_ids[]" value="{{ $subject->id }}"
+                                        @checked($teacher->subjects->contains('id', $subject->id))>
+                                    {{ $subject->name }}
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('subject_ids') <span class="mt-1 block text-xs text-error-500">{{ $message }}</span> @enderror
+                    </fieldset>
                     <div class="flex justify-end gap-3 mt-2">
                         <x-form.button type="button" variant="secondary" @click="$dispatch('close-modal', 'edit-teacher-{{ $teacher->id }}')">
                             Annuler
@@ -197,6 +210,18 @@
                 <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Téléphone</label>
                 <x-form.input type="text" name="phone" placeholder="+216 XX XXX XXX" />
             </div>
+            <fieldset>
+                <legend class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Matières enseignées</legend>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    @foreach($subjects as $subject)
+                        <label class="flex items-center gap-2 rounded-lg border border-gray-200 p-2 text-sm dark:border-gray-700">
+                            <input type="checkbox" name="subject_ids[]" value="{{ $subject->id }}">
+                            {{ $subject->name }}
+                        </label>
+                    @endforeach
+                </div>
+                @error('subject_ids') <span class="mt-1 block text-xs text-error-500">{{ $message }}</span> @enderror
+            </fieldset>
             <div class="rounded-lg bg-brand-50 p-3 dark:bg-brand-500/10">
                 <p class="text-xs text-brand-700 dark:text-brand-300">
                     <i data-lucide="info" class="inline w-3 h-3"></i>

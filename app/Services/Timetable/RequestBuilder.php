@@ -50,7 +50,13 @@ class RequestBuilder
                     continue;
                 }
 
-                $teacherIds = $plan->teachers()->pluck('users.id')->toArray();
+                // Seuls les comptes enseignants reliés à la matière via teacher_subject
+                // peuvent être affectés à une séance.
+                $teacherIds = $plan->teachers()
+                    ->where('users.role', 'TEACHER')
+                    ->where('users.is_active', true)
+                    ->pluck('users.id')
+                    ->toArray();
 
                 $tpGroups = (int) config('timetable.tp_groups', 2);
                 $minCapacity = $plan->teaching_type === 'TP'

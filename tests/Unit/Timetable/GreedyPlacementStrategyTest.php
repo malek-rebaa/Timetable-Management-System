@@ -63,7 +63,7 @@ class GreedyPlacementStrategyTest extends TestCase
         );
 
         // On bloque les créneaux avant la pause pour forcer le premier point libre à 11:00.
-        $registry->book($teacher->id, $room->id, $classRoom->id, 'MONDAY', 0, 6);
+        $registry->book($teacher->id, $room->id, $classRoom->id, null, 'MONDAY', 0, 6);
 
         $placed = $strategy->place($request);
 

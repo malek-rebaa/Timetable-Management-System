@@ -7,6 +7,28 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Système de gestion des emplois du temps
+
+Application Laravel de génération d'emplois du temps. La génération vérifie les disponibilités des classes, enseignants et salles, la capacité/type des salles, les groupes de TP et les créneaux avec pauses.
+
+### Démarrage local
+
+1. Configurez la base MySQL dans `.env`, puis lancez `php artisan migrate`.
+2. Démarrez l'application avec `php artisan serve` ou via Apache/XAMPP.
+3. La génération est asynchrone (`QUEUE_CONNECTION=database`). Dans un second terminal, démarrez le worker :
+
+   ```powershell
+   php artisan queue:work
+   ```
+
+Sans ce worker, un emploi du temps reste volontairement à l'état `PENDING`.
+
+### Vérification
+
+```powershell
+php artisan test
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

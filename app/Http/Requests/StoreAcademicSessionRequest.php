@@ -23,7 +23,7 @@ class StoreAcademicSessionRequest extends FormRequest
             'subject_plan_id' => ['required', 'exists:subject_plans,id'],
             'teacher_id' => ['required', 'exists:users,id'],
             'class_room_id' => ['required', 'exists:class_rooms,id'],
-            'room_id' => ['nullable', 'exists:rooms,id'],
+            'room_id' => ['required', 'exists:rooms,id'],
             'day' => ['required', Rule::in(config('timetable.days'))],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],

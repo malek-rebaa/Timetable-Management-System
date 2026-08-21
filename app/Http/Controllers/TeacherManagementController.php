@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PasswordGenerator;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,8 +12,10 @@ class TeacherManagementController extends Controller
 {
     public function index()
     {
-        $teachers = User::where('role', 'TEACHER')->get();
-        return view('teachers.index', compact('teachers'));
+        $teachers = User::where('role', 'TEACHER')->with('subjects')->get();
+        $subjects = Subject::orderBy('name')->get();
+
+        return view('teachers.index', compact('teachers', 'subjects'));
     }
 
     public function store(Request $request)
@@ -21,6 +24,8 @@ class TeacherManagementController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'phone'      => ['nullable', 'string', 'max:20'],
+            'subject_ids' => ['required', 'array', 'min:1'],
+            'subject_ids.*' => ['integer', 'exists:subjects,id'],
         ]);
 
         $email = PasswordGenerator::generateEmail($validated['first_name'], $validated['last_name']);
@@ -35,6 +40,7 @@ class TeacherManagementController extends Controller
             'role'       => 'TEACHER',
             'is_active'  => 1,
         ]);
+        $teacher->subjects()->sync($validated['subject_ids']);
 
         return redirect()->route('teachers.index')
             ->with('success', 'Enseignant créé avec succès.')
@@ -52,9 +58,16 @@ class TeacherManagementController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'phone'      => ['nullable', 'string', 'max:20'],
+            'subject_ids' => ['required', 'array', 'min:1'],
+            'subject_ids.*' => ['integer', 'exists:subjects,id'],
         ]);
 
-        $teacher->update($validated);
+        $teacher->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'phone' => $validated['phone'] ?? null,
+        ]);
+        $teacher->subjects()->sync($validated['subject_ids']);
 
         return redirect()->route('teachers.index')
             ->with('success', 'Enseignant mis à jour avec succès.');

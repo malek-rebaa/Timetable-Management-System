@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class GenerateTimetableJob implements ShouldQueue
 {
@@ -35,8 +36,12 @@ class GenerateTimetableJob implements ShouldQueue
                 'status' => 'RUNNING',
             ]);
 
-        if (!$timetable) {
-            throw new \InvalidArgumentException('Timetable not found');
+        if (! $timetable) {
+            Log::warning('Timetable generation skipped because the timetable no longer exists.', [
+                'timetable_id' => $this->timetableId,
+            ]);
+
+            return;
         }
 
         // Mettre à jour le statut
