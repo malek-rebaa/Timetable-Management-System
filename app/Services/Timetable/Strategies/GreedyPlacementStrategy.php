@@ -45,7 +45,12 @@ class GreedyPlacementStrategy
             'BREAK_CONFLICT' => 0,
         ];
 
-        foreach ($days as $day) {
+        // Trier les jours par nombre de séances déjà placées (jour le moins chargé en premier)
+        $daysSorted = collect($days)->sortBy(function ($day) {
+            return $this->registry->sessionsCountOnDay($day);
+        })->values()->all();
+
+        foreach ($daysSorted as $day) {
             $slotsForDay = $this->grid->slotsForDay($day);
             $maxSlotIndex = count($slotsForDay) - $slotsNeeded;
 
