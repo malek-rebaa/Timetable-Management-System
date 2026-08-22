@@ -18,9 +18,9 @@
             Emploi du Temps
         </h2>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
             {{-- Sélecteur de vue --}}
-            <div x-data="{ viewMode: '{{ request('view_mode', 'class') }}' }" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div x-data="{ viewMode: '{{ request('view_mode', 'class') }}' }" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shrink-0">
                 <button @click="viewMode='class'; updateUrl('view_mode', 'class')"
                     :class="viewMode === 'class' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'"
                     class="px-3 py-1.5 text-xs font-medium rounded-md transition-all">
@@ -31,6 +31,7 @@
             {{-- Filtre classe --}}
             @if(isset($classRooms) && $classRooms->count())
                 <x-form.select name="filter_class"
+                    class="!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0"
                     x-data="{ current: '{{ request('filter_class', '') }}' }"
                     @change="updateUrl('filter_class', $event.target.value)">
                     <option value="">Toutes les classes</option>
@@ -42,11 +43,10 @@
                 </x-form.select>
             @endif
 
-            {{-- (Filtres Enseignant et Salle retirés à la demande) --}}
-
             {{-- Filtre emploi du temps --}}
             @if(isset($timetables) && $timetables->count())
                 <x-form.select name="timetable_id"
+                    class="!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0"
                     x-data="{ current: '{{ request('timetable_id', '') }}' }"
                     @change="updateUrl('timetable_id', $event.target.value)">
                     <option value="">Saisie manuelle</option>
@@ -54,9 +54,9 @@
                         <option value="{{ $tt->id }}" {{ request('timetable_id') == $tt->id ? 'selected' : '' }}>
                             {{ $tt->name }}
                             @if($tt->status === 'COMPLETED')
-                                <span class="text-xs text-success-500">✓</span>
+                                ✓
                             @elseif($tt->status === 'FAILED')
-                                <span class="text-xs text-error-500">✗</span>
+                                ✗
                             @endif
                         </option>
                     @endforeach
@@ -66,24 +66,25 @@
             @unless(auth()->user()->role === 'TEACHER')
             @if($selectedTimetable)
                 <form method="POST" action="{{ route('timetable.destroy', $selectedTimetable) }}"
+                    class="flex shrink-0 m-0"
                     onsubmit="return confirm('Supprimer cet emploi du temps et toutes ses séances, y compris les séances verrouillées ?');">
                     @csrf
                     @method('DELETE')
-                    <x-form.button type="submit" variant="danger">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> Supprimer
+                    <x-form.button type="submit" variant="danger" class="!py-1.5 !px-3 !text-xs h-[32px]">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> Supprimer
                     </x-form.button>
                 </form>
             @endif
 
-            <x-form.button variant="primary"
+            <x-form.button variant="primary" class="!py-1.5 !px-3 !text-xs h-[32px] shrink-0"
                 @click="$dispatch('open-modal', 'add-session')">
-                <i data-lucide="plus" class="w-4 h-4"></i> Nouvelle Séance
+                <i data-lucide="plus" class="w-3 h-3"></i> Nouvelle Séance
             </x-form.button>
 
-            <x-form.button variant="secondary"
+            <x-form.button variant="secondary" class="!py-1.5 !px-3 !text-xs h-[32px] shrink-0"
                 x-on:click="generateTimetable"
                 >
-                <i data-lucide="zap" class="w-4 h-4"></i> Générer
+                <i data-lucide="zap" class="w-3 h-3"></i> Générer
             </x-form.button>
             @endunless
         </div>
@@ -241,8 +242,8 @@
                                                 @php
                                                     $isTheory = $session->subjectPlan->teaching_type === 'THEORY';
                                                     $colorClass = $isTheory
-                                                        ? 'bg-brand-50 border-brand-500 text-brand-600'
-                                                        : 'bg-success-50 border-success-500 text-success-600';
+                                                        ? 'bg-brand-50 border-brand-400 text-brand-800 dark:bg-brand-900/40 dark:border-brand-500 dark:text-brand-300'
+                                                        : 'bg-success-50 border-success-400 text-success-800 dark:bg-success-900/40 dark:border-success-500 dark:text-success-300';
                                                     $typeLabel = $isTheory ? 'THEORY' : 'TP';
                                                 @endphp
                                                 <div class="rounded-md border-l-4 {{ $colorClass }} p-2 shadow-theme-xs text-xs h-full flex flex-col justify-center">

@@ -147,4 +147,51 @@ class OccupancyRegistry
     {
         return $this->grid->slotsPerDay;
     }
+
+    /**
+     * Nombre de séances (créneaux occupés) placées sur un jour donné.
+     * Somme sur toutes les ressources (enseignants, salles, classes).
+     */
+    public function sessionsCountOnDay(string $day): int
+    {
+        $count = 0;
+        
+        // Compter les créneaux occupés pour les enseignants
+        foreach ($this->teacherBusy as $teacherDays) {
+            if (isset($teacherDays[$day])) {
+                $count += $this->countBits($teacherDays[$day]);
+            }
+        }
+        
+        // Compter les créneaux occupés pour les salles
+        foreach ($this->roomBusy as $roomDays) {
+            if (isset($roomDays[$day])) {
+                $count += $this->countBits($roomDays[$day]);
+            }
+        }
+        
+        // Compter les créneaux occupés pour les classes
+        foreach ($this->classBusy as $classGroups) {
+            foreach ($classGroups as $groupDays) {
+                if (isset($groupDays[$day])) {
+                    $count += $this->countBits($groupDays[$day]);
+                }
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Compte le nombre de bits à 1 dans un entier (population count).
+     */
+    protected function countBits(int $mask): int
+    {
+        $count = 0;
+        while ($mask) {
+            $count += $mask & 1;
+            $mask >>= 1;
+        }
+        return $count;
+    }
 }

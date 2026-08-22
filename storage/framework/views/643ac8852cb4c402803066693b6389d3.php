@@ -27,9 +27,9 @@
             Emploi du Temps
         </h2>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
             
-            <div x-data="{ viewMode: '<?php echo e(request('view_mode', 'class')); ?>' }" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div x-data="{ viewMode: '<?php echo e(request('view_mode', 'class')); ?>' }" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shrink-0">
                 <button @click="viewMode='class'; updateUrl('view_mode', 'class')"
                     :class="viewMode === 'class' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'"
                     class="px-3 py-1.5 text-xs font-medium rounded-md transition-all">
@@ -41,14 +41,14 @@
             <?php if(isset($classRooms) && $classRooms->count()): ?>
                 <?php if (isset($component)) { $__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.select','data' => ['name' => 'filter_class','xData' => '{ current: \''.e(request('filter_class', '')).'\' }','@change' => 'updateUrl(\'filter_class\', $event.target.value)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.select','data' => ['name' => 'filter_class','class' => '!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0','xData' => '{ current: \''.e(request('filter_class', '')).'\' }','@change' => 'updateUrl(\'filter_class\', $event.target.value)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('form.select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['name' => 'filter_class','x-data' => '{ current: \''.e(request('filter_class', '')).'\' }','@change' => 'updateUrl(\'filter_class\', $event.target.value)']); ?>
+<?php $component->withAttributes(['name' => 'filter_class','class' => '!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0','x-data' => '{ current: \''.e(request('filter_class', '')).'\' }','@change' => 'updateUrl(\'filter_class\', $event.target.value)']); ?>
                     <option value="">Toutes les classes</option>
                     <?php $__currentLoopData = $classRooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <option value="<?php echo e($class->id); ?>" <?php echo e(request('filter_class') == $class->id ? 'selected' : ''); ?>>
@@ -68,28 +68,26 @@
             <?php endif; ?>
 
             
-
-            
             <?php if(isset($timetables) && $timetables->count()): ?>
                 <?php if (isset($component)) { $__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.select','data' => ['name' => 'timetable_id','xData' => '{ current: \''.e(request('timetable_id', '')).'\' }','@change' => 'updateUrl(\'timetable_id\', $event.target.value)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.select','data' => ['name' => 'timetable_id','class' => '!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0','xData' => '{ current: \''.e(request('timetable_id', '')).'\' }','@change' => 'updateUrl(\'timetable_id\', $event.target.value)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('form.select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['name' => 'timetable_id','x-data' => '{ current: \''.e(request('timetable_id', '')).'\' }','@change' => 'updateUrl(\'timetable_id\', $event.target.value)']); ?>
+<?php $component->withAttributes(['name' => 'timetable_id','class' => '!py-1.5 !px-3 !text-xs h-[32px] !w-auto max-w-[160px] shrink-0','x-data' => '{ current: \''.e(request('timetable_id', '')).'\' }','@change' => 'updateUrl(\'timetable_id\', $event.target.value)']); ?>
                     <option value="">Saisie manuelle</option>
                     <?php $__currentLoopData = $timetables; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <option value="<?php echo e($tt->id); ?>" <?php echo e(request('timetable_id') == $tt->id ? 'selected' : ''); ?>>
                             <?php echo e($tt->name); ?>
 
                             <?php if($tt->status === 'COMPLETED'): ?>
-                                <span class="text-xs text-success-500">✓</span>
+                                ✓
                             <?php elseif($tt->status === 'FAILED'): ?>
-                                <span class="text-xs text-error-500">✗</span>
+                                ✗
                             <?php endif; ?>
                         </option>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -108,20 +106,21 @@
             <?php if (! (auth()->user()->role === 'TEACHER')): ?>
             <?php if($selectedTimetable): ?>
                 <form method="POST" action="<?php echo e(route('timetable.destroy', $selectedTimetable)); ?>"
+                    class="flex shrink-0 m-0"
                     onsubmit="return confirm('Supprimer cet emploi du temps et toutes ses séances, y compris les séances verrouillées ?');">
                     <?php echo csrf_field(); ?>
                     <?php echo method_field('DELETE'); ?>
                     <?php if (isset($component)) { $__componentOriginal8a31ff0802d1df0c26bb607f30439b3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['type' => 'submit','variant' => 'danger']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['type' => 'submit','variant' => 'danger','class' => '!py-1.5 !px-3 !text-xs h-[32px]']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('form.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'submit','variant' => 'danger']); ?>
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> Supprimer
+<?php $component->withAttributes(['type' => 'submit','variant' => 'danger','class' => '!py-1.5 !px-3 !text-xs h-[32px]']); ?>
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> Supprimer
                      <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a)): ?>
@@ -137,15 +136,15 @@
 
             <?php if (isset($component)) { $__componentOriginal8a31ff0802d1df0c26bb607f30439b3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['variant' => 'primary','@click' => '$dispatch(\'open-modal\', \'add-session\')']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['variant' => 'primary','class' => '!py-1.5 !px-3 !text-xs h-[32px] shrink-0','@click' => '$dispatch(\'open-modal\', \'add-session\')']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('form.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['variant' => 'primary','@click' => '$dispatch(\'open-modal\', \'add-session\')']); ?>
-                <i data-lucide="plus" class="w-4 h-4"></i> Nouvelle Séance
+<?php $component->withAttributes(['variant' => 'primary','class' => '!py-1.5 !px-3 !text-xs h-[32px] shrink-0','@click' => '$dispatch(\'open-modal\', \'add-session\')']); ?>
+                <i data-lucide="plus" class="w-3 h-3"></i> Nouvelle Séance
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a)): ?>
@@ -159,15 +158,15 @@
 
             <?php if (isset($component)) { $__componentOriginal8a31ff0802d1df0c26bb607f30439b3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['variant' => 'secondary','xOn:click' => 'generateTimetable']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.button','data' => ['variant' => 'secondary','class' => '!py-1.5 !px-3 !text-xs h-[32px] shrink-0','xOn:click' => 'generateTimetable']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('form.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['variant' => 'secondary','x-on:click' => 'generateTimetable']); ?>
-                <i data-lucide="zap" class="w-4 h-4"></i> Générer
+<?php $component->withAttributes(['variant' => 'secondary','class' => '!py-1.5 !px-3 !text-xs h-[32px] shrink-0','x-on:click' => 'generateTimetable']); ?>
+                <i data-lucide="zap" class="w-3 h-3"></i> Générer
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal8a31ff0802d1df0c26bb607f30439b3a)): ?>
@@ -347,8 +346,8 @@
                                                 <?php
                                                     $isTheory = $session->subjectPlan->teaching_type === 'THEORY';
                                                     $colorClass = $isTheory
-                                                        ? 'bg-brand-50 border-brand-500 text-brand-600'
-                                                        : 'bg-success-50 border-success-500 text-success-600';
+                                                        ? 'bg-brand-50 border-brand-400 text-brand-800 dark:bg-brand-900/40 dark:border-brand-500 dark:text-brand-300'
+                                                        : 'bg-success-50 border-success-400 text-success-800 dark:bg-success-900/40 dark:border-success-500 dark:text-success-300';
                                                     $typeLabel = $isTheory ? 'THEORY' : 'TP';
                                                 ?>
                                                 <div class="rounded-md border-l-4 <?php echo e($colorClass); ?> p-2 shadow-theme-xs text-xs h-full flex flex-col justify-center">

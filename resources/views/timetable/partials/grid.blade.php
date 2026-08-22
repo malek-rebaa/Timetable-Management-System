@@ -93,8 +93,8 @@
                                         @php
                                             $isTheory = $session->subjectPlan->teaching_type === 'THEORY';
                                             $colorClass = $isTheory
-                                                ? 'bg-brand-50 border-brand-500 text-brand-600'
-                                                : 'bg-success-50 border-success-500 text-success-600';
+                                                ? 'bg-brand-50 border-brand-400 text-brand-800 dark:bg-brand-900/40 dark:border-brand-500 dark:text-brand-300'
+                                                : 'bg-success-50 border-success-400 text-success-800 dark:bg-success-900/40 dark:border-success-500 dark:text-success-300';
                                             $typeLabel = $isTheory ? 'THEORY' : 'TP';
                                         @endphp
                                         <div class="rounded-md border-l-4 {{ $colorClass }} p-2 shadow-theme-xs text-xs h-full flex flex-col justify-center">

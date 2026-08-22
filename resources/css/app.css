@@ -45,6 +45,34 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
+  --color-success-50: var(--color-green-50);
+  --color-success-400: var(--color-green-400);
+  --color-success-500: var(--color-green-500);
+  --color-success-600: var(--color-green-600);
+  --color-success-700: var(--color-green-700);
+  --color-success-800: var(--color-green-800);
+  --color-success-900: var(--color-green-900);
+
+  --color-error-50: var(--color-red-50);
+  --color-error-200: var(--color-red-200);
+  --color-error-300: var(--color-red-300);
+  --color-error-400: var(--color-red-400);
+  --color-error-500: var(--color-red-500);
+  --color-error-600: var(--color-red-600);
+  --color-error-700: var(--color-red-700);
+  --color-error-800: var(--color-red-800);
+  --color-error-900: var(--color-red-900);
+
+  --color-warning-50: var(--color-yellow-50);
+  --color-warning-200: var(--color-yellow-200);
+  --color-warning-300: var(--color-yellow-300);
+  --color-warning-400: var(--color-yellow-400);
+  --color-warning-500: var(--color-yellow-500);
+  --color-warning-600: var(--color-yellow-600);
+  --color-warning-700: var(--color-yellow-700);
+  --color-warning-800: var(--color-yellow-800);
+  --color-warning-900: var(--color-yellow-900);
+
   --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
   --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
 }

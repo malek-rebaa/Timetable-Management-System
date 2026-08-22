@@ -29,9 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     // Profile (own password change) - accessible by all authenticated users
     Route::get('/profile/password', [ProfileController::class, 'showPasswordForm'])->name('profile.password');

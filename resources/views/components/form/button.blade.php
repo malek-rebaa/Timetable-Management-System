@@ -9,6 +9,6 @@ $classes = match($variant) {
 };
 @endphp
 
-<button {{ $attributes->merge(['class' => 'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:ring-4 ' . $classes]) }}>
+<button {{ $attributes->merge(['class' => 'inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-4 ' . $classes]) }}>
     {{ $slot }}
 </button>

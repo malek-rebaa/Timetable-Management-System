@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>"
+      x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+      x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +19,7 @@
     <!-- Lucide Icons via CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans antialiased" x-data="{ sidebarOpen: false }">
 
     <div class="flex h-screen overflow-hidden">
         

@@ -13,6 +13,12 @@
         </div>
 
         <div class="flex items-center gap-3 2xsm:gap-7">
+            <!-- Dark Mode Toggler -->
+            <button @click="darkMode = !darkMode" class="p-1.5 text-gray-500 rounded-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors">
+                <i data-lucide="sun" class="w-5 h-5" x-show="!darkMode"></i>
+                <i data-lucide="moon" class="w-5 h-5" x-show="darkMode" style="display: none;"></i>
+            </button>
+
             <!-- User Profile Dropdown -->
             <?php if(auth()->guard()->check()): ?>
             <div class="relative" x-data="{ dropdownOpen: false }" @click.outside="dropdownOpen = false">
