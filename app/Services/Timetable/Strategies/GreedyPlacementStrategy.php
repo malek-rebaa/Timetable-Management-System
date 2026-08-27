@@ -87,7 +87,13 @@ class GreedyPlacementStrategy
                 // Trouver une salle libre (si requise)
                 $roomId = null;
                 if (!empty($request->roomIds)) {
-                    foreach ($request->roomIds as $rid) {
+                    // Trier les salles par charge actuelle (la moins chargée en premier)
+                    $sortedRooms = collect($request->roomIds)
+                        ->sortBy(fn ($rid) => $this->registry->roomLoad($rid))
+                        ->values()
+                        ->all();
+
+                    foreach ($sortedRooms as $rid) {
                         if ($this->registry->isRoomFree($rid, $day, $slotIndex, $slotsNeeded)) {
                             $roomId = $rid;
                             break;

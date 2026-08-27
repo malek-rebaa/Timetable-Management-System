@@ -123,6 +123,18 @@ class OccupancyRegistry
         return $this->teacherLoad[$teacherId] ?? 0;
     }
 
+    /**
+     * Charge hebdomadaire d'une salle (en créneaux).
+     */
+    public function roomLoad(int $roomId): int
+    {
+        $load = 0;
+        foreach ($this->roomBusy[$roomId] ?? [] as $dayMask) {
+            $load += $this->countBits($dayMask);
+        }
+        return $load;
+    }
+
     protected function isFree(int $busyMask, int $startIndex, int $slots): bool
     {
         // Les bits [startIndex, startIndex+slots) doivent être tous à 0
