@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
         <a href="<?php echo e(url('/')); ?>" class="flex items-center gap-3">
             <i data-lucide="book-open-check" class="text-brand-500 w-8 h-8"></i>
-            <span class="text-xl font-bold text-gray-800 dark:text-white">EduTime</span>
+            <span class="text-xl font-bold text-gray-800 dark:text-white">EduCentre</span>
         </a>
 
         <button class="block lg:hidden text-gray-500 hover:text-gray-700" @click.stop="sidebarOpen = !sidebarOpen">
