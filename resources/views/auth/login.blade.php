@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connexion - EduTime</title>
+    <title>Connexion - EduCentre</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -17,7 +17,7 @@
                 <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
                     <i data-lucide="book-open-check" class="h-8 w-8"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Bienvenue sur EduTime</h1>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Bienvenue sur EduCentre</h1>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Connectez-vous pour accéder à votre espace</p>
             </div>
 
