@@ -47,27 +47,26 @@
                      x-transition
                      style="display: none;"
                      class="absolute right-0 mt-4 flex w-56 flex-col rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
-                    <ul class="flex flex-col gap-1 border-b border-gray-200 p-2 dark:border-gray-800">
+                    <ul class="flex flex-col gap-1 p-2">
                         <li>
-                            <a href="<?php echo e(route('profile.password')); ?>" class="menu-dropdown-item menu-dropdown-item-inactive">
-                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            <a href="<?php echo e(route('profile.password')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors">
+                                <i data-lucide="key" class="w-4.5 h-4.5 text-gray-500 dark:text-gray-400"></i>
                                 Mot de passe
                             </a>
                         </li>
+                        <li class="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
+                            <form method="POST" action="<?php echo e(route('logout')); ?>">
+                                <?php echo csrf_field(); ?>
+                                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-error-600 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+                                    <i data-lucide="log-out" class="w-4.5 h-4.5 text-error-500"></i>
+                                    Se déconnecter
+                                </button>
+                            </form>
+                        </li>
                     </ul>
-                    <div class="p-2">
-                        <form method="POST" action="<?php echo e(route('logout')); ?>">
-                            <?php echo csrf_field(); ?>
-                            <button type="submit" class="w-full menu-dropdown-item menu-dropdown-item-inactive text-error-600 hover:bg-error-50 dark:hover:bg-error-500/10">
-                                <i data-lucide="log-out" class="w-4 h-4"></i>
-                                Déconnexion
-                            </button>
-                        </form>
-                    </div>
                 </div>
             </div>
             <?php endif; ?>
         </div>
     </div>
-</header>
-<?php /**PATH C:\xampp\htdocs\timetable-app\resources\views/components/layout/topbar.blade.php ENDPATH**/ ?>
+</header><?php /**PATH C:\xampp\htdocs\timetable-app\resources\views/components/layout/topbar.blade.php ENDPATH**/ ?>
