@@ -58,6 +58,7 @@ class TeacherManagementController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'phone'      => ['nullable', 'string', 'max:20'],
+            'is_active'  => ['required', 'boolean'],
             'subject_ids' => ['required', 'array', 'min:1'],
             'subject_ids.*' => ['integer', 'exists:subjects,id'],
         ]);
@@ -66,6 +67,7 @@ class TeacherManagementController extends Controller
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'phone' => $validated['phone'] ?? null,
+            'is_active' => $validated['is_active'],
         ]);
         $teacher->subjects()->sync($validated['subject_ids']);
 

@@ -71,7 +71,11 @@
                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $teacher->email }}</td>
                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $teacher->phone ?? '—' }}</td>
                 <td class="px-5 py-4">
-                    <span class="inline-block px-2 py-1 bg-warning-50 text-warning-600 rounded text-xs font-semibold uppercase">Enseignant</span>
+                    @if($teacher->is_active)
+                        <span class="inline-block px-2 py-1 bg-success-50 text-success-600 rounded text-xs font-semibold uppercase">Disponible</span>
+                    @else
+                        <span class="inline-block px-2 py-1 bg-error-50 text-error-600 rounded text-xs font-semibold uppercase">Indisponible</span>
+                    @endif
                 </td>
                 <td class="px-5 py-4">
                     <div class="flex gap-2">
@@ -118,6 +122,13 @@
                     <div>
                         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Téléphone</label>
                         <x-form.input type="text" name="phone" value="{{ $teacher->phone }}" placeholder="+216 XX XXX XXX" />
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Statut</label>
+                        <x-form.select name="is_active" required>
+                            <option value="1" @selected($teacher->is_active)>Disponible (Actif)</option>
+                            <option value="0" @selected(!$teacher->is_active)>Indisponible (Inactif)</option>
+                        </x-form.select>
                     </div>
                     <fieldset>
                         <legend class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Matières enseignées</legend>

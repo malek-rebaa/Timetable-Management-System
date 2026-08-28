@@ -117,7 +117,11 @@
                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400"><?php echo e($teacher->email); ?></td>
                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400"><?php echo e($teacher->phone ?? '—'); ?></td>
                 <td class="px-5 py-4">
-                    <span class="inline-block px-2 py-1 bg-warning-50 text-warning-600 rounded text-xs font-semibold uppercase">Enseignant</span>
+                    <?php if($teacher->is_active): ?>
+                        <span class="inline-block px-2 py-1 bg-success-50 text-success-600 rounded text-xs font-semibold uppercase">Disponible</span>
+                    <?php else: ?>
+                        <span class="inline-block px-2 py-1 bg-error-50 text-error-600 rounded text-xs font-semibold uppercase">Indisponible</span>
+                    <?php endif; ?>
                 </td>
                 <td class="px-5 py-4">
                     <div class="flex gap-2">
@@ -229,6 +233,31 @@
 <?php if (isset($__componentOriginal5c2a97ab476b69c1189ee85d1a95204b)): ?>
 <?php $component = $__componentOriginal5c2a97ab476b69c1189ee85d1a95204b; ?>
 <?php unset($__componentOriginal5c2a97ab476b69c1189ee85d1a95204b); ?>
+<?php endif; ?>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Statut</label>
+                        <?php if (isset($component)) { $__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.select','data' => ['name' => 'is_active','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('form.select'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['name' => 'is_active','required' => true]); ?>
+                            <option value="1" <?php if($teacher->is_active): echo 'selected'; endif; ?>>Disponible (Actif)</option>
+                            <option value="0" <?php if(!$teacher->is_active): echo 'selected'; endif; ?>>Indisponible (Inactif)</option>
+                         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36)): ?>
+<?php $attributes = $__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36; ?>
+<?php unset($__attributesOriginal8cee41e4af1fe2df52d1d5acd06eed36); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36)): ?>
+<?php $component = $__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36; ?>
+<?php unset($__componentOriginal8cee41e4af1fe2df52d1d5acd06eed36); ?>
 <?php endif; ?>
                     </div>
                     <fieldset>
@@ -657,5 +686,4 @@ unset($__errorArgs, $__bag); ?>
 <?php if (isset($__componentOriginalcf7e1d4949dbd350ec830409f7127ebc)): ?>
 <?php $component = $__componentOriginalcf7e1d4949dbd350ec830409f7127ebc; ?>
 <?php unset($__componentOriginalcf7e1d4949dbd350ec830409f7127ebc); ?>
-<?php endif; ?>
-<?php /**PATH C:\xampp\htdocs\timetable-app\resources\views/teachers/index.blade.php ENDPATH**/ ?>
+<?php endif; ?><?php /**PATH C:\xampp\htdocs\timetable-app\resources\views/teachers/index.blade.php ENDPATH**/ ?>
