@@ -24,8 +24,7 @@ class CheckRole
 
         $user = Auth::user();
 
-        if (in_array('SUPER_ADMIN', $roles, true)
-            && ($user->role === 'SUPER_ADMIN' || $user->hasSystemRole('SUPER_ADMIN'))) {
+        if ($user->role === 'OWNER' || $user->hasSystemRole('OWNER')) {
             return $next($request);
         }
 
@@ -36,7 +35,15 @@ class CheckRole
             ->where('status', 'ACTIVE')
             ->first();
 
+        if (in_array('SUPER_ADMIN', $roles, true)
+            && $schoolId !== null
+            && ($user->role === 'SUPER_ADMIN' || $user->hasSystemRole('SUPER_ADMIN'))
+            && $membership !== null) {
+            return $next($request);
+        }
+
         $roleMap = [
+            'SUPER_ADMIN' => 'SUPER_ADMIN',
             'ADMIN' => 'SCHOOL_ADMIN',
             'TEACHER' => 'TEACHER',
             'PARENT' => 'PARENT',

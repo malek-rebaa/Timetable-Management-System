@@ -30,6 +30,15 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    Route::middleware(['role:OWNER'])->group(function () {
+        Route::prefix('schools')->name('schools.')->group(function () {
+            Route::get('/', [SchoolManagementController::class, 'index'])->name('index');
+            Route::post('/', [SchoolManagementController::class, 'store'])->name('store');
+            Route::post('/{school}/provision', [SchoolManagementController::class, 'provision'])->name('provision');
+            Route::post('/{school}/activate', [SchoolManagementController::class, 'activate'])->name('activate');
+        });
+    });
+
     // Toute route qui peut atteindre les données pédagogiques exige un tenant.
     Route::middleware('tenant')->group(function () {
     // Dashboard
@@ -53,13 +62,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:SUPER_ADMIN'])->group(function () {
-        Route::prefix('schools')->name('schools.')->group(function () {
-            Route::get('/', [SchoolManagementController::class, 'index'])->name('index');
-            Route::post('/', [SchoolManagementController::class, 'store'])->name('store');
-            Route::post('/{school}/provision', [SchoolManagementController::class, 'provision'])->name('provision');
-            Route::post('/{school}/activate', [SchoolManagementController::class, 'activate'])->name('activate');
-        });
-
         Route::get('/branding', [SchoolBrandingController::class, 'edit'])->name('branding.edit');
         Route::put('/branding', [SchoolBrandingController::class, 'update'])->name('branding.update');
 

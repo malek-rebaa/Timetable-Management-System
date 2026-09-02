@@ -11,7 +11,7 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-title-md font-semibold text-gray-800 dark:text-white">Écoles clientes</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Une école possède sa propre base de données et son administrateur.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Une école possède sa propre base de données et son super administrateur.</p>
         </div>
 
         <?php if (isset($component)) { $__componentOriginal8a31ff0802d1df0c26bb607f30439b3a = $component; } ?>
@@ -41,7 +41,7 @@
         <div class="mb-6 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/20 dark:bg-success-500/10" x-data="{ show: true }" x-show="show">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-sm font-semibold text-success-800 dark:text-success-300">Compte administrateur créé</h3>
+                    <h3 class="text-sm font-semibold text-success-800 dark:text-success-300">Compte super administrateur créé</h3>
                     <p class="mt-2 text-sm text-success-700 dark:text-success-200">
                         Email : <strong><?php echo e(session('generated_email')); ?></strong><br>
                         Mot de passe : <strong class="font-mono"><?php echo e(session('generated_password')); ?></strong>
@@ -193,7 +193,7 @@ unset($__errorArgs, $__bag); ?>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Prénom de l'administrateur</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Prénom du super administrateur</label>
                     <?php if (isset($component)) { $__componentOriginal5c2a97ab476b69c1189ee85d1a95204b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal5c2a97ab476b69c1189ee85d1a95204b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.input','data' => ['name' => 'admin_first_name','value' => ''.e(old('admin_first_name')).'','required' => true,'error' => $errors->has('admin_first_name')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -224,7 +224,7 @@ endif;
 unset($__errorArgs, $__bag); ?>
                 </div>
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Nom de l'administrateur</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Nom du super administrateur</label>
                     <?php if (isset($component)) { $__componentOriginal5c2a97ab476b69c1189ee85d1a95204b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal5c2a97ab476b69c1189ee85d1a95204b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.form.input','data' => ['name' => 'admin_last_name','value' => ''.e(old('admin_last_name')).'','required' => true,'error' => $errors->has('admin_last_name')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>

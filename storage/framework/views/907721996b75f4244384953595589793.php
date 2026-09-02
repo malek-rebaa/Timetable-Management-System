@@ -27,7 +27,8 @@
                         <span class="block text-sm font-medium text-gray-800 dark:text-white"><?php echo e(auth()->user()->first_name); ?> <?php echo e(auth()->user()->last_name); ?></span>
                         <span class="block text-xs font-medium text-gray-500 dark:text-gray-400">
                             <?php switch(auth()->user()->role):
-                                case ('SUPER_ADMIN'): ?> Super Admin <?php break; ?>
+                                case ('OWNER'): ?> Owner <?php break; ?>
+                                <?php case ('SUPER_ADMIN'): ?> Super Admin <?php break; ?>
                                 <?php case ('ADMIN'): ?> Admin <?php break; ?>
                                 <?php case ('TEACHER'): ?> Enseignant <?php break; ?>
                             <?php endswitch; ?>

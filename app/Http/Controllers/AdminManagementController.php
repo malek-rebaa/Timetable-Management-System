@@ -4,15 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Helpers\PasswordGenerator;
 use App\Models\User;
+use App\Multitenancy\CurrentTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class AdminManagementController extends Controller
 {
     public function index()
     {
-        $admins = User::where('role', 'ADMIN')->get();
+        $schoolId = app(CurrentTenant::class)->requireSchool()->getKey();
+        $admins = User::forSchool($schoolId)
+            ->whereHas('schoolMemberships', fn ($query) => $query
+                ->where('school_id', $schoolId)
+                ->where('role', 'SCHOOL_ADMIN')
+                ->where('status', 'ACTIVE'))
+            ->get();
         return view('admins.index', compact('admins'));
     }
 
@@ -37,6 +43,12 @@ class AdminManagementController extends Controller
             'is_active'  => 1,
         ]);
 
+        $admin->schools()->attach(app(CurrentTenant::class)->requireSchool()->getKey(), [
+            'role' => 'SCHOOL_ADMIN',
+            'status' => 'ACTIVE',
+            'joined_at' => now(),
+        ]);
+
         return redirect()->route('admins.index')
             ->with('success', 'Admin créé avec succès.')
             ->with('generated_password', $plainPassword)
@@ -45,7 +57,7 @@ class AdminManagementController extends Controller
 
     public function update(Request $request, User $admin)
     {
-        if ($admin->role !== 'ADMIN') {
+        if ($admin->role !== 'ADMIN' || ! $this->belongsToActiveSchool($admin)) {
             abort(403);
         }
 
@@ -63,11 +75,17 @@ class AdminManagementController extends Controller
 
     public function destroy(User $admin)
     {
-        if ($admin->role !== 'ADMIN') {
+        if ($admin->role !== 'ADMIN' || ! $this->belongsToActiveSchool($admin)) {
             abort(403);
         }
 
-        $admin->delete();
+        $admin->schoolMemberships()
+            ->where('school_id', app(CurrentTenant::class)->requireSchool()->getKey())
+            ->delete();
+
+        if (! $admin->schoolMemberships()->exists()) {
+            $admin->delete();
+        }
 
         return redirect()->route('admins.index')
             ->with('success', 'Admin supprimé avec succès.');
@@ -75,7 +93,7 @@ class AdminManagementController extends Controller
 
     public function resetPassword(User $admin)
     {
-        if ($admin->role !== 'ADMIN') {
+        if ($admin->role !== 'ADMIN' || ! $this->belongsToActiveSchool($admin)) {
             abort(403);
         }
 
@@ -86,5 +104,14 @@ class AdminManagementController extends Controller
             ->with('success', 'Mot de passe réinitialisé avec succès.')
             ->with('generated_password', $plainPassword)
             ->with('generated_email', $admin->email);
+    }
+
+    private function belongsToActiveSchool(User $admin): bool
+    {
+        return $admin->schoolMemberships()
+            ->where('school_id', app(CurrentTenant::class)->requireSchool()->getKey())
+            ->where('role', 'SCHOOL_ADMIN')
+            ->where('status', 'ACTIVE')
+            ->exists();
     }
 }

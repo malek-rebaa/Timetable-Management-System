@@ -61,19 +61,18 @@ class SchoolManagementController extends Controller
 
         try {
             DB::connection('master')->transaction(function () use ($validated, $school, $plainPassword, $request): void {
-                $admin = User::create([
+                $superAdmin = User::create([
                     'first_name' => $validated['admin_first_name'],
                     'last_name' => $validated['admin_last_name'],
                     'email' => $validated['admin_email'],
                     'phone' => $validated['admin_phone'] ?: null,
                     'password' => Hash::make($plainPassword),
-                    // Compatibilité avec les écrans existants ; la permission réelle est dans school_user.
-                    'role' => 'ADMIN',
+                    'role' => 'SUPER_ADMIN',
                     'is_active' => true,
                 ]);
 
-                $school->users()->attach($admin->getKey(), [
-                    'role' => 'SCHOOL_ADMIN',
+                $school->users()->attach($superAdmin->getKey(), [
+                    'role' => 'SUPER_ADMIN',
                     'status' => 'ACTIVE',
                     'joined_at' => now(),
                 ]);

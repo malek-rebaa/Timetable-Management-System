@@ -2,7 +2,7 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-title-md font-semibold text-gray-800 dark:text-white">Écoles clientes</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Une école possède sa propre base de données et son administrateur.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Une école possède sa propre base de données et son super administrateur.</p>
         </div>
 
         <x-form.button variant="primary" x-data @click="$dispatch('open-modal', 'create-school')">
@@ -14,7 +14,7 @@
         <div class="mb-6 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/20 dark:bg-success-500/10" x-data="{ show: true }" x-show="show">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-sm font-semibold text-success-800 dark:text-success-300">Compte administrateur créé</h3>
+                    <h3 class="text-sm font-semibold text-success-800 dark:text-success-300">Compte super administrateur créé</h3>
                     <p class="mt-2 text-sm text-success-700 dark:text-success-200">
                         Email : <strong>{{ session('generated_email') }}</strong><br>
                         Mot de passe : <strong class="font-mono">{{ session('generated_password') }}</strong>
@@ -93,12 +93,12 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Prénom de l'administrateur</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Prénom du super administrateur</label>
                     <x-form.input name="admin_first_name" value="{{ old('admin_first_name') }}" required :error="$errors->has('admin_first_name')" />
                     @error('admin_first_name') <p class="mt-1 text-xs text-error-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Nom de l'administrateur</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Nom du super administrateur</label>
                     <x-form.input name="admin_last_name" value="{{ old('admin_last_name') }}" required :error="$errors->has('admin_last_name')" />
                     @error('admin_last_name') <p class="mt-1 text-xs text-error-600">{{ $message }}</p> @enderror
                 </div>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\School;
 use App\Models\SchoolMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +52,7 @@ class AuthController extends Controller
         $user = Auth::user();
 
         return match ($user->role) {
+            'OWNER'       => redirect()->route('schools.index')->with('success', 'Bienvenue Owner'),
             'SUPER_ADMIN' => redirect()->route('dashboard')->with('success', 'Bienvenue Super Admin'),
             'ADMIN'       => redirect()->route('dashboard')->with('success', 'Bienvenue Admin'),
             'TEACHER'     => redirect()->route('teacher.timetable'),
@@ -70,10 +70,6 @@ class AuthController extends Controller
             ->orderBy('school_id')
             ->first()
             ?->school;
-
-        if ($school === null && ($user->role === 'SUPER_ADMIN' || $user->hasSystemRole('SUPER_ADMIN'))) {
-            $school = School::query()->where('status', 'ACTIVE')->orderBy('id')->first();
-        }
 
         if ($school !== null) {
             $request->session()->put('active_school_id', $school->getKey());

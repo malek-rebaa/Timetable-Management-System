@@ -27,6 +27,7 @@
                         <span class="block text-sm font-medium text-gray-800 dark:text-white">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
                         <span class="block text-xs font-medium text-gray-500 dark:text-gray-400">
                             @switch(auth()->user()->role)
+                                @case('OWNER') Owner @break
                                 @case('SUPER_ADMIN') Super Admin @break
                                 @case('ADMIN') Admin @break
                                 @case('TEACHER') Enseignant @break

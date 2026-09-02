@@ -26,7 +26,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('school_id')->constrained('schools')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('role', ['SCHOOL_ADMIN', 'TEACHER', 'PARENT', 'STUDENT']);
+            $table->enum('role', ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'TEACHER', 'PARENT', 'STUDENT']);
             $table->enum('status', ['ACTIVE', 'SUSPENDED'])->default('ACTIVE');
             $table->timestamp('joined_at')->nullable();
             $table->timestamps();

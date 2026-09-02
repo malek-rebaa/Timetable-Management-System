@@ -35,10 +35,13 @@ class IdentifyTenant
             ->where('status', 'ACTIVE')
             ->first();
 
-        $isSuperAdmin = $user->role === 'SUPER_ADMIN' || $user->hasSystemRole('SUPER_ADMIN');
+        $isOwner = $user->role === 'OWNER' || $user->hasSystemRole('OWNER');
 
-        if ($membership === null && $isSuperAdmin) {
-            $school = School::query()->where('status', 'ACTIVE')->orderBy('id')->first();
+        if ($isOwner) {
+            $school = $schoolId === null ? null : School::query()
+                ->whereKey($schoolId)
+                ->where('status', 'ACTIVE')
+                ->first();
         } else {
             $school = $membership?->school;
         }
