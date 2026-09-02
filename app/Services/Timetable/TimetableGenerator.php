@@ -10,6 +10,8 @@ use App\Models\Timetable;
 use App\Models\User;
 use App\Services\Timetable\DTO\PlacedSession;
 use App\Services\Timetable\Strategies\GreedyPlacementStrategy;
+use App\Multitenancy\CurrentTenant;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Orchestrateur de génération d'emploi du temps.
@@ -194,11 +196,14 @@ class TimetableGenerator
                 continue;
             }
 
-            $eligible = User::query()
+            $eligible = User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
                 ->whereKey($ps->teacherId)
                 ->where('role', 'TEACHER')
                 ->where('is_active', true)
-                ->whereHas('subjects', fn ($query) => $query->whereKey($plan->subject_id))
+                ->whereIn('id', DB::connection('tenant')->table('teacher_subject')
+                    ->where('subject_id', $plan->subject_id)
+                    ->whereNotNull('teacher_id')
+                    ->pluck('teacher_id'))
                 ->exists();
 
             if (! $eligible) {
@@ -268,7 +273,8 @@ class TimetableGenerator
         return [
             'classes_analyzed' => $classQuery->count(),
             'plans_analyzed' => SubjectPlan::count(),
-            'teachers_available' => User::where('role', 'TEACHER')->count(),
+            'teachers_available' => User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
+                ->where('role', 'TEACHER')->count(),
             'rooms_available' => Room::count(),
             'slots_per_day' => $this->grid->slotsPerDay,
             'working_days' => count($this->grid->days),

@@ -30,7 +30,7 @@ class TimetableCommitService
             throw new \InvalidArgumentException('Aucune séance à insérer dans l\'emploi du temps.');
         }
 
-        return DB::transaction(function () use ($timetable, $placedSessions) {
+        return DB::connection('tenant')->transaction(function () use ($timetable, $placedSessions) {
             // Supprimer d'abord l'ancien EDT (uniquement les séances non verrouillées)
             $this->clearTimetable($timetable);
 

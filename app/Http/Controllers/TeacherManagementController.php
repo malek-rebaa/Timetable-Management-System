@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Helpers\PasswordGenerator;
 use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\User;
+use App\Multitenancy\CurrentTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,7 +14,8 @@ class TeacherManagementController extends Controller
 {
     public function index()
     {
-        $teachers = User::where('role', 'TEACHER')->with('subjects')->get();
+        $schoolId = app(CurrentTenant::class)->requireSchool()->getKey();
+        $teachers = User::forSchool($schoolId)->where('role', 'TEACHER')->with('subjects')->get();
         $subjects = Subject::orderBy('name')->get();
 
         return view('teachers.index', compact('teachers', 'subjects'));
@@ -25,7 +28,7 @@ class TeacherManagementController extends Controller
             'last_name'  => ['required', 'string', 'max:255'],
             'phone'      => ['nullable', 'string', 'max:20'],
             'subject_ids' => ['required', 'array', 'min:1'],
-            'subject_ids.*' => ['integer', 'exists:subjects,id'],
+            'subject_ids.*' => ['integer', 'exists:tenant.subjects,id'],
         ]);
 
         $email = PasswordGenerator::generateEmail($validated['first_name'], $validated['last_name']);
@@ -40,6 +43,12 @@ class TeacherManagementController extends Controller
             'role'       => 'TEACHER',
             'is_active'  => 1,
         ]);
+        $teacher->schools()->attach($schoolId = app(CurrentTenant::class)->requireSchool()->getKey(), [
+            'role' => 'TEACHER',
+            'status' => 'ACTIVE',
+            'joined_at' => now(),
+        ]);
+        TeacherProfile::firstOrCreate(['master_user_id' => $teacher->getKey()]);
         $teacher->subjects()->sync($validated['subject_ids']);
 
         return redirect()->route('teachers.index')
@@ -50,7 +59,7 @@ class TeacherManagementController extends Controller
 
     public function update(Request $request, User $teacher)
     {
-        if ($teacher->role !== 'TEACHER') {
+        if (! $this->belongsToActiveSchool($teacher)) {
             abort(403);
         }
 
@@ -60,7 +69,7 @@ class TeacherManagementController extends Controller
             'phone'      => ['nullable', 'string', 'max:20'],
             'is_active'  => ['required', 'boolean'],
             'subject_ids' => ['required', 'array', 'min:1'],
-            'subject_ids.*' => ['integer', 'exists:subjects,id'],
+            'subject_ids.*' => ['integer', 'exists:tenant.subjects,id'],
         ]);
 
         $teacher->update([
@@ -77,7 +86,7 @@ class TeacherManagementController extends Controller
 
     public function destroy(User $teacher)
     {
-        if ($teacher->role !== 'TEACHER') {
+        if (! $this->belongsToActiveSchool($teacher)) {
             abort(403);
         }
 
@@ -87,7 +96,15 @@ class TeacherManagementController extends Controller
                 ->with('error', 'Impossible de supprimer cet enseignant car il a des séances associées. Veuillez d\'abord supprimer ses séances.');
         }
 
-        $teacher->delete();
+        $teacher->subjects()->detach();
+        TeacherProfile::where('master_user_id', $teacher->getKey())->delete();
+        $teacher->schoolMemberships()
+            ->where('school_id', app(CurrentTenant::class)->id())
+            ->delete();
+
+        if (! $teacher->schoolMemberships()->exists()) {
+            $teacher->delete();
+        }
 
         return redirect()->route('teachers.index')
             ->with('success', 'Enseignant supprimé avec succès.');
@@ -95,7 +112,7 @@ class TeacherManagementController extends Controller
 
     public function resetPassword(User $teacher)
     {
-        if ($teacher->role !== 'TEACHER') {
+        if (! $this->belongsToActiveSchool($teacher)) {
             abort(403);
         }
 
@@ -106,5 +123,14 @@ class TeacherManagementController extends Controller
             ->with('success', 'Mot de passe réinitialisé avec succès.')
             ->with('generated_password', $plainPassword)
             ->with('generated_email', $teacher->email);
+    }
+
+    private function belongsToActiveSchool(User $teacher): bool
+    {
+        return $teacher->role === 'TEACHER'
+            && $teacher->schoolMemberships()
+                ->where('school_id', app(CurrentTenant::class)->id())
+                ->where('status', 'ACTIVE')
+                ->exists();
     }
 }

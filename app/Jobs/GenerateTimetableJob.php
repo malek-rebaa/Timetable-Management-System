@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Events\TimetableGenerated;
 use App\Events\TimetableGenerationFailed;
 use App\Models\Timetable;
+use App\Models\School;
+use App\Multitenancy\TenantDatabaseManager;
 use App\Services\Timetable\TimetableGenerator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,12 +22,25 @@ class GenerateTimetableJob implements ShouldQueue
     public $timeout = 300; // 5 minutes max
 
     public function __construct(
+        public int $schoolId,
         public ?int $timetableId = null,
         public array $options = []
     ) {
     }
 
-    public function handle(TimetableGenerator $generator): void
+    public function handle(TimetableGenerator $generator, TenantDatabaseManager $tenantDatabase): void
+    {
+        $school = School::query()->where('status', 'ACTIVE')->findOrFail($this->schoolId);
+        $tenantDatabase->activate($school);
+
+        try {
+            $this->generate($generator);
+        } finally {
+            $tenantDatabase->deactivate();
+        }
+    }
+
+    private function generate(TimetableGenerator $generator): void
     {
         $timetable = $this->timetableId
             ? Timetable::find($this->timetableId)

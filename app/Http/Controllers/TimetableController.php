@@ -10,6 +10,7 @@ use App\Models\SubjectPlan;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Services\Timetable\SlotGrid;
+use App\Multitenancy\CurrentTenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +22,8 @@ class TimetableController extends Controller
     public function index(Request $request)
     {
         $classRooms = ClassRoom::with('level')->get();
-        $teachers = User::where('role', 'TEACHER')->get();
+        $teachers = User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
+            ->where('role', 'TEACHER')->get();
         $timetables = Timetable::orderBy('created_at', 'desc')->get();
         $subjectPlans = SubjectPlan::with(['subject', 'level'])->get();
         $selectedTimetable = $request->filled('timetable_id')
@@ -124,8 +126,8 @@ class TimetableController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'academic_year' => ['nullable', 'string'],
             'semester' => ['nullable', 'string'],
-            'timetable_id' => ['nullable', 'exists:timetables,id'],
-            'filter_class' => ['nullable', 'exists:class_rooms,id'],
+            'timetable_id' => ['nullable', 'exists:tenant.timetables,id'],
+            'filter_class' => ['nullable', 'exists:tenant.class_rooms,id'],
         ]);
 
         $timetableId = $validated['timetable_id'] ?? null;
@@ -154,7 +156,7 @@ class TimetableController extends Controller
             $options['class_room_id'] = (int) $classRoomId;
         }
 
-        GenerateTimetableJob::dispatch($timetableId, $options);
+        GenerateTimetableJob::dispatch(app(CurrentTenant::class)->requireSchool()->getKey(), $timetableId, $options);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -174,7 +176,7 @@ class TimetableController extends Controller
      */
     public function destroyTimetable(Timetable $timetable)
     {
-        DB::transaction(function () use ($timetable) {
+        DB::connection('tenant')->transaction(function () use ($timetable) {
             $timetable->academicSessions()->delete();
             $timetable->delete();
         });

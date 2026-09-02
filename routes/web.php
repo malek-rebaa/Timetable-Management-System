@@ -8,6 +8,8 @@ use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\SubjectManagementController;
 use App\Http\Controllers\TeacherManagementController;
 use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\SchoolBrandingController;
+use App\Http\Controllers\SchoolManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +30,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Toute route qui peut atteindre les données pédagogiques exige un tenant.
+    Route::middleware('tenant')->group(function () {
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
@@ -49,6 +53,16 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:SUPER_ADMIN'])->group(function () {
+        Route::prefix('schools')->name('schools.')->group(function () {
+            Route::get('/', [SchoolManagementController::class, 'index'])->name('index');
+            Route::post('/', [SchoolManagementController::class, 'store'])->name('store');
+            Route::post('/{school}/provision', [SchoolManagementController::class, 'provision'])->name('provision');
+            Route::post('/{school}/activate', [SchoolManagementController::class, 'activate'])->name('activate');
+        });
+
+        Route::get('/branding', [SchoolBrandingController::class, 'edit'])->name('branding.edit');
+        Route::put('/branding', [SchoolBrandingController::class, 'update'])->name('branding.update');
+
         Route::prefix('admins')->name('admins.')->group(function () {
             Route::get('/', [AdminManagementController::class, 'index'])->name('index');
             Route::post('/', [AdminManagementController::class, 'store'])->name('store');
@@ -97,6 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/timetables/{timetable}', [TimetableController::class, 'destroyTimetable'])->name('destroy');
     });
 
+    });
 });
 
 /*

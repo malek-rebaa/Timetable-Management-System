@@ -6,6 +6,9 @@ use App\Models\ClassRoom;
 use App\Models\Room;
 use App\Models\SubjectPlan;
 use App\Services\Timetable\DTO\SessionRequest;
+use App\Models\User;
+use App\Multitenancy\CurrentTenant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 /**
@@ -52,10 +55,14 @@ class RequestBuilder
 
                 // Seuls les comptes enseignants reliés à la matière via teacher_subject
                 // peuvent être affectés à une séance.
-                $teacherIds = $plan->teachers()
-                    ->where('users.role', 'TEACHER')
-                    ->where('users.is_active', true)
-                    ->pluck('users.id')
+                $teacherIds = User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
+                    ->whereIn('id', DB::connection('tenant')->table('teacher_subject')
+                        ->where('subject_id', $plan->subject_id)
+                        ->whereNotNull('teacher_id')
+                        ->pluck('teacher_id'))
+                    ->where('role', 'TEACHER')
+                    ->where('is_active', true)
+                    ->pluck('id')
                     ->toArray();
 
                 $tpGroups = (int) config('timetable.tp_groups', 2);

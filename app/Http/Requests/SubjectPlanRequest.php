@@ -17,8 +17,8 @@ class SubjectPlanRequest extends FormRequest
         $subjectPlan = $this->route('subjectPlan');
 
         return [
-            'level_id' => ['required', 'exists:levels,id'],
-            'subject_id' => ['required', 'exists:subjects,id'],
+            'level_id' => ['required', 'exists:tenant.levels,id'],
+            'subject_id' => ['required', 'exists:tenant.subjects,id'],
             'sessions_per_week' => ['required', 'integer', 'min:1', 'max:20'],
             'session_duration' => ['required', 'integer', 'min:30', 'max:480'],
             'teaching_type' => ['required', Rule::in(['THEORY', 'TP'])],

@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
         <a href="<?php echo e(url('/')); ?>" class="flex items-center gap-3">
             <i data-lucide="book-open-check" class="text-brand-500 w-8 h-8"></i>
-            <span class="text-xl font-bold text-gray-800 dark:text-white">EduCentre</span>
+            <span class="text-xl font-bold text-gray-800 dark:text-white"><?php echo e(app(\App\Multitenancy\CurrentTenant::class)->school()?->name ?? 'EduTime'); ?></span>
         </a>
 
         <button class="block lg:hidden text-gray-500 hover:text-gray-700" @click.stop="sidebarOpen = !sidebarOpen">
@@ -89,9 +89,21 @@
                 <h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     <li>
+                        <a href="<?php echo e(route('schools.index')); ?>" class="group menu-item <?php echo e(request()->routeIs('schools.*') ? 'menu-item-active' : 'menu-item-inactive'); ?>">
+                            <i data-lucide="building-2" class="w-5 h-5 <?php echo e(request()->routeIs('schools.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'); ?>"></i>
+                            <span class="menu-item-text">Écoles</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="<?php echo e(route('admins.index')); ?>" class="group menu-item <?php echo e(request()->routeIs('admins.*') ? 'menu-item-active' : 'menu-item-inactive'); ?>">
                             <i data-lucide="shield" class="w-5 h-5 <?php echo e(request()->routeIs('admins.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'); ?>"></i>
                             <span class="menu-item-text">Administrateurs</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?php echo e(route('branding.edit')); ?>" class="group menu-item <?php echo e(request()->routeIs('branding.*') ? 'menu-item-active' : 'menu-item-inactive'); ?>">
+                            <i data-lucide="palette" class="w-5 h-5 <?php echo e(request()->routeIs('branding.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'); ?>"></i>
+                            <span class="menu-item-text">Apparence</span>
                         </a>
                     </li>
                 </ul>

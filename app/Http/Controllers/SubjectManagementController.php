@@ -7,15 +7,23 @@ use App\Http\Requests\SubjectRequest;
 use App\Models\Level;
 use App\Models\Subject;
 use App\Models\SubjectPlan;
+use Illuminate\Support\Facades\DB;
 
 class SubjectManagementController extends Controller
 {
     public function index()
     {
         $subjects = Subject::query()
-            ->withCount(['teachers', 'subjectPlans'])
+            ->withCount('subjectPlans')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(function (Subject $subject): void {
+                $subject->setAttribute('teachers_count', DB::connection('tenant')
+                    ->table('teacher_subject')
+                    ->where('subject_id', $subject->getKey())
+                    ->whereNotNull('teacher_id')
+                    ->count());
+            });
 
         $levels = Level::query()->orderBy('name')->get();
 
@@ -45,7 +53,11 @@ class SubjectManagementController extends Controller
 
     public function destroy(Subject $subject)
     {
-        if ($subject->subjectPlans()->exists() || $subject->teachers()->exists()) {
+        $hasTeachers = DB::connection('tenant')->table('teacher_subject')
+            ->where('subject_id', $subject->getKey())
+            ->exists();
+
+        if ($subject->subjectPlans()->exists() || $hasTeachers) {
             return back()->with('error', 'Impossible de supprimer cette matière : elle est utilisée par un programme ou un enseignant.');
         }
 

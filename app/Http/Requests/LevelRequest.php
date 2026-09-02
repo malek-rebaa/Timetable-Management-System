@@ -17,7 +17,7 @@ class LevelRequest extends FormRequest
         $level = $this->route('level');
 
         return [
-            'name' => ['required', 'string', 'max:100', Rule::unique('levels', 'name')->ignore($level)],
+            'name' => ['required', 'string', 'max:100', Rule::unique('tenant.levels', 'name')->ignore($level)],
         ];
     }
 }

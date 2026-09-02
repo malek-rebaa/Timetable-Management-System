@@ -7,6 +7,7 @@ use App\Models\ClassRoom;
 use App\Models\Room;
 use App\Models\SubjectPlan;
 use App\Models\User;
+use App\Multitenancy\CurrentTenant;
 
 use App\Services\Timetable\Contracts\ConstraintCheckerInterface;
 
@@ -58,11 +59,17 @@ class ConflictChecker implements ConstraintCheckerInterface
             return ['Le plan de cours est introuvable.'];
         }
 
-        if (User::find($candidate->teacher_id)?->role !== 'TEACHER') {
+        $teacher = User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
+            ->whereKey($candidate->teacher_id)
+            ->where('role', 'TEACHER')
+            ->where('is_active', true)
+            ->first();
+
+        if ($teacher === null) {
             return ['La séance doit être assurée par un enseignant.'];
         }
 
-        $isEligible = \DB::table('teacher_subject')
+        $isEligible = \DB::connection('tenant')->table('teacher_subject')
             ->where('teacher_id', $candidate->teacher_id)
             ->where('subject_id', $plan->subject_id)
             ->exists();
@@ -246,7 +253,7 @@ class ConflictChecker implements ConstraintCheckerInterface
      */
     public function isTeacherEligible(User $teacher, int $subjectId): bool
     {
-        return \DB::table('teacher_subject')
+        return \DB::connection('tenant')->table('teacher_subject')
             ->where('teacher_id', $teacher->id)
             ->where('subject_id', $subjectId)
             ->exists();

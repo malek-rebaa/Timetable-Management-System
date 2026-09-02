@@ -8,10 +8,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
-    <title><?php echo e(config('app.name', 'Timetable System')); ?></title>
+    <?php
+        $activeSchool = app(\App\Multitenancy\CurrentTenant::class)->school();
+        $primaryColor = $activeSchool?->primary_color;
+        $secondaryColor = $activeSchool?->secondary_color;
+        $primaryColor = is_string($primaryColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $primaryColor) ? $primaryColor : '#4F46E5';
+        $secondaryColor = is_string($secondaryColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $secondaryColor) ? $secondaryColor : '#4338CA';
+    ?>
+
+    <title><?php echo e($activeSchool?->name ?? config('app.name', 'EduTime')); ?></title>
 
     <!-- Scripts and Styles -->
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+    <style>
+        :root {
+            --color-brand-25: color-mix(in srgb, <?php echo e($primaryColor); ?> 4%, white);
+            --color-brand-50: color-mix(in srgb, <?php echo e($primaryColor); ?> 10%, white);
+            --color-brand-100: color-mix(in srgb, <?php echo e($primaryColor); ?> 20%, white);
+            --color-brand-200: color-mix(in srgb, <?php echo e($primaryColor); ?> 35%, white);
+            --color-brand-300: color-mix(in srgb, <?php echo e($primaryColor); ?> 55%, white);
+            --color-brand-400: color-mix(in srgb, <?php echo e($primaryColor); ?> 75%, white);
+            --color-brand-500: <?php echo e($primaryColor); ?>;
+            --color-brand-600: <?php echo e($secondaryColor); ?>;
+            --color-brand-700: color-mix(in srgb, <?php echo e($secondaryColor); ?> 85%, black);
+            --color-brand-800: color-mix(in srgb, <?php echo e($secondaryColor); ?> 70%, black);
+            --color-brand-900: color-mix(in srgb, <?php echo e($secondaryColor); ?> 55%, black);
+        }
+    </style>
     
     <!-- Alpine.js via CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

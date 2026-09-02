@@ -17,7 +17,7 @@ class RoomRequest extends FormRequest
         $room = $this->route('room');
 
         return [
-            'name' => ['required', 'string', 'max:100', Rule::unique('rooms', 'name')->ignore($room)],
+            'name' => ['required', 'string', 'max:100', Rule::unique('tenant.rooms', 'name')->ignore($room)],
             'type' => ['required', Rule::in(['CLASSROOM', 'LABORATORY', 'AMPHITHEATER'])],
             'capacity' => ['required', 'integer', 'min:1', 'max:5000'],
         ];

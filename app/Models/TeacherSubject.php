@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantModel;
 
 class TeacherSubject extends Model
 {
-    use HasFactory;
+    use HasFactory, TenantModel;
 
     protected $fillable = ['teacher_id', 'subject_id'];
 

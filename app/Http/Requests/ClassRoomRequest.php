@@ -17,12 +17,12 @@ class ClassRoomRequest extends FormRequest
         $classRoom = $this->route('classRoom');
 
         return [
-            'level_id' => ['required', 'exists:levels,id'],
+            'level_id' => ['required', 'exists:tenant.levels,id'],
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('class_rooms', 'name')
+                Rule::unique('tenant.class_rooms', 'name')
                     ->where(fn ($query) => $query->where('level_id', $this->input('level_id')))
                     ->ignore($classRoom),
             ],

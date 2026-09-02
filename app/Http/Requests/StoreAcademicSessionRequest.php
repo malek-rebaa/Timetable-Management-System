@@ -6,6 +6,8 @@ use App\Services\Timetable\ConflictChecker;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
+use App\Multitenancy\CurrentTenant;
 
 class StoreAcademicSessionRequest extends FormRequest
 {
@@ -20,16 +22,16 @@ class StoreAcademicSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'subject_plan_id' => ['required', 'exists:subject_plans,id'],
+            'subject_plan_id' => ['required', 'exists:tenant.subject_plans,id'],
             'teacher_id' => ['required', 'exists:users,id'],
-            'class_room_id' => ['required', 'exists:class_rooms,id'],
-            'room_id' => ['required', 'exists:rooms,id'],
+            'class_room_id' => ['required', 'exists:tenant.class_rooms,id'],
+            'room_id' => ['required', 'exists:tenant.rooms,id'],
             'day' => ['required', Rule::in(config('timetable.days'))],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'group_number' => ['nullable', 'integer', 'min:1', 'max:' . config('timetable.tp_groups')],
             'is_locked' => ['sometimes', 'boolean'],
-            'timetable_id' => ['nullable', 'exists:timetables,id'],
+            'timetable_id' => ['nullable', 'exists:tenant.timetables,id'],
         ];
     }
 
@@ -53,6 +55,18 @@ class StoreAcademicSessionRequest extends FormRequest
         $validator->after(function ($validator) {
             // On ne vérifie les conflits que si la structure est valide
             if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $isSchoolTeacher = User::forSchool(app(CurrentTenant::class)->requireSchool()->getKey())
+                ->whereKey($this->input('teacher_id'))
+                ->where('role', 'TEACHER')
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $isSchoolTeacher) {
+                $validator->errors()->add('teacher_id', 'Cet enseignant n’appartient pas à l’école active.');
+
                 return;
             }
 

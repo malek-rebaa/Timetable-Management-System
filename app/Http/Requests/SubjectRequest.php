@@ -17,7 +17,7 @@ class SubjectRequest extends FormRequest
         $subject = $this->route('subject');
 
         return [
-            'name' => ['required', 'string', 'max:150', Rule::unique('subjects', 'name')->ignore($subject)],
+            'name' => ['required', 'string', 'max:150', Rule::unique('tenant.subjects', 'name')->ignore($subject)],
         ];
     }
 }

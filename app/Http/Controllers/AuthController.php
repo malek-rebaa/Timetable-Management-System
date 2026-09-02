@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\School;
+use App\Models\SchoolMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +34,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $this->selectInitialSchool($request, Auth::user());
 
         return $this->redirectToDashboard();
     }
@@ -55,5 +58,25 @@ class AuthController extends Controller
             'TEACHER'     => redirect()->route('teacher.timetable'),
             default       => redirect()->route('login'),
         };
+    }
+
+    private function selectInitialSchool(Request $request, User $user): void
+    {
+        $school = SchoolMembership::query()
+            ->with('school')
+            ->where('user_id', $user->getKey())
+            ->where('status', 'ACTIVE')
+            ->whereHas('school', fn ($query) => $query->where('status', 'ACTIVE'))
+            ->orderBy('school_id')
+            ->first()
+            ?->school;
+
+        if ($school === null && ($user->role === 'SUPER_ADMIN' || $user->hasSystemRole('SUPER_ADMIN'))) {
+            $school = School::query()->where('status', 'ACTIVE')->orderBy('id')->first();
+        }
+
+        if ($school !== null) {
+            $request->session()->put('active_school_id', $school->getKey());
+        }
     }
 }
